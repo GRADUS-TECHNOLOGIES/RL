@@ -1,0 +1,19 @@
+[
+    {
+        "origin": [
+            "http://localhost:5173",
+            "https://revistalegislatura.com.mx"
+        ],
+        "method": [
+            "GET",
+            "HEAD",
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "maxAgeSeconds": 3600,
+        "responseHeader": [
+            "Content-Type"
+        ]
+    }
+]
