@@ -116,7 +116,7 @@ export default function Header() {
                 ) : (
                     /* Botón de registro */
                     <Link to="/sign-in">
-                        <Button className='bg-white text-[#b076ce] hover:bg-black hover:text-white transition-all'>
+                        <Button className='bg-white text-[#b076ce] hover:bg-black hover:text-white transition-all dark:bg-[#b076ce] dark:text-white dark:hover:bg-white dark:hover:text-[#b076ce]'>
                             Ingresar
                         </Button>
                     </Link>

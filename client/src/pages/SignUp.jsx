@@ -85,15 +85,15 @@ export default function SignUp() {
                 <div className="flex-1">
                     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                         <div>
-                            <Label htmlFor="username" value="Your username">Tu ususario</Label>
+                            <Label htmlFor="username" value="Your username" className='dark:text-black'>Tu ususario</Label>
                             <TextInput type="text" placeholder="Usuario" id="username" onChange={handleChange} />
                         </div>
                         <div>
-                            <Label htmlFor="email" value="Your email">Tu correo</Label>
+                            <Label htmlFor="email" value="Your email" className='dark:text-black'>Tu correo</Label>
                             <TextInput type="email" placeholder="nombre@dominio.com" id="email" onChange={handleChange} />
                         </div>
                         <div>
-                            <Label htmlFor="password" value="Your password">Tu contraseña</Label>
+                            <Label htmlFor="password" value="Your password" className='dark:text-black'>Tu contraseña</Label>
                             <TextInput type="password" placeholder="Contraseña" id="password" onChange={handleChange} />
                         </div>
                         <Button type="submit" className='bg-[#b076ce] hover:bg-black hover:text-[#b076ce] rounded-tl-xl rounded-bl-none transition-all' disabled={loading}>

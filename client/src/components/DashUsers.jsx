@@ -105,13 +105,13 @@ export default function DashUsers() {
                     <Table hoverable className='shadow-md'>
                         <TableHead>
                             <TableRow>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Fecha de creación</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Imagen</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Nombre de usuario</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Correo electrónico</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Admin</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Hacer admin</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Eliminar</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Fecha de creación</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Imagen</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Nombre de usuario</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Correo electrónico</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Admin</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Hacer admin</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Eliminar</TableHeadCell>
                             </TableRow>
                         </TableHead>
 
@@ -130,7 +130,7 @@ export default function DashUsers() {
                                         />
                                     </TableCell>
                                     <TableCell className='font-medium text-gray-900'>{user.username}</TableCell>
-                                    <TableCell className='text-gray-600'>{user.email}</TableCell>
+                                    <TableCell className='text-gray-600 dark:text-gray-400'>{user.email}</TableCell>
                                     <TableCell>
                                         {user.isAdmin ? (
                                             <span className='flex items-center gap-1 text-green-500'>

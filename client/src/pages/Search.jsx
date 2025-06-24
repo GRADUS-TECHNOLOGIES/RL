@@ -126,10 +126,10 @@ export default function Search() {
     return (
         <div className="flex flex-col md:flex-row min-h-screen">
             <div className="p-7 border-b md:border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 md:min-h-screen w-full md:w-auto">
-                <h2 className="font-semibold text-lg mb-4">Filtrar contenido</h2>
+                <h2 className="font-semibold text-lg mb-4 dark:text-white">Filtrar contenido</h2>
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <label htmlFor="searchTerm" className="whitespace-nowrap font-medium">
+                        <label htmlFor="searchTerm" className="whitespace-nowrap font-medium dark:text-white">
                             Término:
                         </label>
                         <TextInput
@@ -143,7 +143,7 @@ export default function Search() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <label htmlFor="sort" className="whitespace-nowrap font-medium">
+                        <label htmlFor="sort" className="whitespace-nowrap font-medium dark:text-white">
                             Orden:
                         </label>
                         <Select id="sort" value={sidebarData.sort} onChange={handleChange}>
@@ -153,7 +153,7 @@ export default function Search() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <label htmlFor="category" className="whitespace-nowrap font-medium">
+                        <label htmlFor="category" className="whitespace-nowrap font-medium dark:text-white">
                             Categoría:
                         </label>
                         <Select id="category" value={sidebarData.category} onChange={handleChange}>

@@ -76,13 +76,13 @@ export default function DashPosts() {
                     <Table hoverable className='shadow-md'>
                         <TableHead>
                             <TableRow>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Fecha</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Imagen/PDF</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Título</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Categoría</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Tipo</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Eliminar</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Editar</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Fecha</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Imagen/PDF</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Título</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Categoría</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Tipo</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Eliminar</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Editar</TableHeadCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -106,7 +106,7 @@ export default function DashPosts() {
                                     </TableCell>
                                     <TableCell>
                                         <Link
-                                            className='font-medium text-gray-900 dark:text-white hover:text-[#b076ce]'
+                                            className='font-medium text-gray-900 dark:text-gray-400 hover:text-[#b076ce]'
                                             to={`/post/${post.slug}`}
                                         >
                                             {post.title}

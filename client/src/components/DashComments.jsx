@@ -82,12 +82,12 @@ export default function DashComments() {
                     <Table hoverable className='shadow-md'>
                         <TableHead>
                             <TableRow>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Fecha de creación</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Contenido</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Likes</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Post Id</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>User Id</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold'>Eliminar</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Fecha de creación</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Contenido</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Likes</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Post Id</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>User Id</TableHeadCell>
+                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Eliminar</TableHeadCell>
                             </TableRow>
                         </TableHead>
                         {comments.map((comment) => (

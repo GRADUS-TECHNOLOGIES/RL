@@ -12,7 +12,7 @@ import { BsTwitter, BsFacebook, BsInstagram } from 'react-icons/bs';
 
 export default function FooterComponent() {
     return (
-        <Footer container className='bg-black text-white mt-4'>
+        <Footer container className='bg-black text-white mt-2'>
             <div className='w-full max-w-7xl mx-auto px-4 py-12'>
                 {/* Contenido superior */}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
