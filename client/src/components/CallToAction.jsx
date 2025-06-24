@@ -16,7 +16,7 @@ export default function CallToAction() {
                 <Button
                     href="/error"
                     rel="noopener noreferrer"
-                    className="w-full sm:w-auto mt-2 sm:mt-0 bg-[#b076ce] hover:bg-black hover:text-[#b076ce] rounded-tl-xl rounded-bl-none transition-all duration-300"
+                    className="w-full sm:w-auto mt-2 sm:mt-0 bg-[#b076ce] hover:bg-black hover:text-[#b076ce] dark:bg-[#b076ce] dark:hover:bg-black rounded-tl-xl rounded-bl-none transition-all duration-300"
                 >
                     <HiBell className="mr-2 h-5 w-5" />
                     Suscribirse
