@@ -147,7 +147,7 @@ export default function PostPage() {
                 <div className="flex justify-end max-w-6xl mx-auto px-3">
                     <Button
                         onClick={() => navigate(`/update-post/${post._id}`)}
-                        className="mt-2 bg-purple-600 hover:bg-purple-700 transition"
+                        className="mt-1 bg-white text-black border-2 rounded-full hover:rounded-l hover:text-[#b076ce] hover:bg-black dark:bg-white dark:hover:bg-black transition-all duration-300"
                     >
                         Editar Post
                     </Button>
@@ -159,7 +159,7 @@ export default function PostPage() {
             </h1>
 
             <Link to={`/search?category=${post.category}`} className="self-center mt-5">
-                <Button pill size="xs" className="bg-white text-[#b076ce] border-2 hover:text-white hover:bg-[#b076ce] transition-colors duration-300">
+                <Button pill size="xs" className="bg-white text-[#b076ce] border-2 hover:text-white hover:bg-[#b076ce] dark:bg-white dark:hover:bg-[#b076ce] transition-colors duration-300">
                     {post.category}
                 </Button>
             </Link>
@@ -212,7 +212,10 @@ export default function PostPage() {
             </div>
 
             {!post.pdf && (
-                <div className="p-3 max-w-2xl mx-auto w-full post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
+                <div
+                    className="p-3 max-w-2xl mx-auto w-full post-content"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                />
             )}
 
             <div className="max-w-4xl mx-auto w-full">

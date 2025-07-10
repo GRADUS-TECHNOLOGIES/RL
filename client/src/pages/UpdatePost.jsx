@@ -17,6 +17,7 @@ import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+// Tiptap
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -25,9 +26,20 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import TextStyle from '@tiptap/extension-text-style';
+import TextAlign from '@tiptap/extension-text-align';
+import Color from '@tiptap/extension-color';
+import Emoji from '@tiptap/extension-emoji';
+import Blockquote from '@tiptap/extension-blockquote';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+// Componentes
 import EditorToolbar from '../components/EditorToolbar';
 import { GlobalWorkerOptions } from 'pdfjs-dist';
 
+// Configura el worker de pdfjs (versión fija)
 GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 export default function UpdatePost() {
@@ -57,24 +69,28 @@ export default function UpdatePost() {
         extensions: [
             StarterKit,
             Underline,
+            TextStyle,
+            Color.configure({ types: ['textStyle'] }),
             BulletList,
             OrderedList,
             ListItem,
-            Link.configure({
-                openOnClick: false,
-            }),
-            Placeholder.configure({
-                placeholder: 'Escribir algo...',
+            Link.configure({ openOnClick: false }),
+            Emoji.configure({ allowInline: true }),
+            Blockquote,
+            Table.configure({ resizable: true }),
+            TableRow,
+            TableCell,
+            TableHeader,
+            Placeholder.configure({ placeholder: 'Escribe algo...' }),
+            TextAlign.configure({
+                types: ['heading', 'paragraph'],
             }),
         ],
         content: formData.content || '',
         editable: !isMagazineMode,
         onUpdate: useCallback(({ editor }) => {
             const content = editor.getHTML();
-            setFormData((prev) => ({
-                ...prev,
-                content,
-            }));
+            setFormData((prev) => ({ ...prev, content }));
         }, []),
     });
 

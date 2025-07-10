@@ -5,14 +5,19 @@
 @plugin "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
 
+/* Estilos del editor Tiptap (creación de post) */
 .toolbar button:hover svg {
     color: #3b82f6;
-    /* Azul cuando pasas el mouse */
 }
 
 .toolbar button.bg-blue-100 svg {
     color: #3b82f6;
-    /* Azul cuando está activo */
+}
+
+.tiptap-wrapper .ProseMirror {
+    font-family: 'Montserrat', sans-serif;
+    min-height: 300px;
+    outline: none;
 }
 
 .tiptap-wrapper .ProseMirror h1 {
@@ -48,15 +53,85 @@
 
 .tiptap-wrapper .ProseMirror a {
     color: #3b82f6;
-    /* Azul claro */
     text-decoration: underline;
 }
 
-.post-content p {
-    margin-bottom: 0.5rem;
+/* Alineaciones en el editor */
+.tiptap-wrapper .ProseMirror p,
+.tiptap-wrapper .ProseMirror h1,
+.tiptap-wrapper .ProseMirror h2,
+.tiptap-wrapper .ProseMirror h3 {
+    text-align: inherit;
 }
 
-/* Encabezados */
+.tiptap-wrapper .ProseMirror p[data-text-align="left"],
+.tiptap-wrapper .ProseMirror h1[data-text-align="left"],
+.tiptap-wrapper .ProseMirror h2[data-text-align="left"],
+.tiptap-wrapper .ProseMirror h3[data-text-align="left"] {
+    text-align: left;
+}
+
+.tiptap-wrapper .ProseMirror p[data-text-align="center"],
+.tiptap-wrapper .ProseMirror h1[data-text-align="center"],
+.tiptap-wrapper .ProseMirror h2[data-text-align="center"],
+.tiptap-wrapper .ProseMirror h3[data-text-align="center"] {
+    text-align: center;
+}
+
+.tiptap-wrapper .ProseMirror p[data-text-align="right"],
+.tiptap-wrapper .ProseMirror h1[data-text-align="right"],
+.tiptap-wrapper .ProseMirror h2[data-text-align="right"],
+.tiptap-wrapper .ProseMirror h3[data-text-align="right"] {
+    text-align: right;
+}
+
+/* Estilos de texto dinámico en editor */
+.tiptap-wrapper .ProseMirror span[style*="font-size"] {
+    font-size: inherit;
+}
+
+.tiptap-wrapper .ProseMirror span[style*="color"] {
+    color: inherit;
+}
+
+/* Citas */
+.tiptap-wrapper .ProseMirror blockquote {
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    border-left: 4px solid #ccc;
+    background-color: #f9f9f9;
+    font-style: italic;
+    color: #555;
+}
+
+/* Tablas en el editor */
+.tiptap-wrapper .ProseMirror table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+.tiptap-wrapper .ProseMirror th,
+.tiptap-wrapper .ProseMirror td {
+    border: 1px solid #ccc;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.tiptap-wrapper .ProseMirror th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* Estilos para posts ya publicados */
+.post-content p {
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: #333;
+}
+
 .post-content h1,
 .post-content h2,
 .post-content h3,
@@ -82,14 +157,6 @@
     font-size: 1.5rem;
 }
 
-/* Párrafos */
-.post-content p {
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: #333;
-}
-
-/* Negritas, cursivas y subrayado */
 .post-content strong {
     font-weight: bold;
 }
@@ -102,7 +169,6 @@
     text-decoration: underline;
 }
 
-/* Enlaces */
 .post-content a {
     color: #0066cc;
     text-decoration: none;
@@ -112,7 +178,6 @@
     text-decoration: underline;
 }
 
-/* Listas no ordenadas */
 .post-content ul {
     margin: 1rem 0;
     padding-left: 1.5rem;
@@ -123,7 +188,6 @@
     margin-bottom: 0.5rem;
 }
 
-/* Listas ordenadas */
 .post-content ol {
     margin: 1rem 0;
     padding-left: 1.5rem;
@@ -134,7 +198,6 @@
     margin-bottom: 0.5rem;
 }
 
-/* Imágenes */
 .post-content img {
     display: block;
     width: 100%;
@@ -145,7 +208,6 @@
     border: 1px solid #ddd;
 }
 
-/* Citas */
 .post-content blockquote {
     margin: 1.5rem 0;
     padding: 1rem 1.5rem;
@@ -155,7 +217,6 @@
     color: #555;
 }
 
-/* Código inline */
 .post-content code {
     background-color: #eee;
     padding: 0.2rem 0.4rem;
@@ -164,7 +225,6 @@
     font-size: 0.9rem;
 }
 
-/* Bloques de código */
 .post-content pre {
     background-color: #2d2d2d;
     color: #fff;
@@ -177,7 +237,6 @@
     margin: 1.5rem 0;
 }
 
-/* Tablas */
 .post-content table {
     width: 100%;
     border-collapse: collapse;
@@ -198,12 +257,10 @@
     font-weight: bold;
 }
 
-/* Imágenes redondeadas */
 .post-content .rounded-md {
     border-radius: 8px;
 }
 
-/* Clases adicionales útiles */
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -213,7 +270,7 @@
     display: block;
 }
 
-/* Modo oscuro (usa clase "dark" en el body o contenedor) */
+/* Modo oscuro */
 .dark .post-content {
     color: #e6e6e6;
 }
@@ -242,4 +299,9 @@
 .dark .post-content pre {
     background-color: #1a1a1a;
     color: #f8f8f8;
+}
+
+.sticky-toolbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
 }

@@ -142,15 +142,16 @@ export default function CommentSection({ postId }) {
             {currentUser && (
                 <form onSubmit={handleSubmit} className='border border-[#b076ce] rounded-md p-3'>
                     <Textarea
-                        placeholder='Add a comment...'
+                        placeholder='Añadir comentario...'
                         rows='3'
                         maxLength='200'
                         onChange={(e) => setComment(e.target.value)}
                         value={comment}
+                        className='dark:bg-[#F9FAFB] dark:border-[#D9DDE2]'
                     />
                     <div className="flex justify-between items-center mt-5">
                         <p className='text-gray-500 text-sm'>{200 - comment.length} characters remaining</p>
-                        <Button className='bg-white text-[#b076ce] border hover:bg-[#b076ce] hover:text-white transition-colors duration-300' type='submit'>
+                        <Button className='bg-white text-[#b076ce] border hover:bg-[#b076ce] hover:text-white dark:bg-white dark:hover:bg-[#b076ce] transition-colors duration-300' type='submit'>
                             Comentar
                         </Button>
                     </div>
