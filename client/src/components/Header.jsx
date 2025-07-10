@@ -73,7 +73,7 @@ export default function Header() {
             <Link to="/" className='flex items-center gap-2 self-center'>
                 <img
                     src={scrolled ? "/logoFooter.svg" : "/logoNavbar.svg"}
-                    alt="RL Logo"
+                    alt="RL_Logo"
                     className='h-15 w-auto transition-all duration-300'
                 />
             </Link>
