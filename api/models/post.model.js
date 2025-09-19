@@ -38,6 +38,12 @@ const postSchema = new mongoose.Schema(
         pdf: {
             type: String,
             default: '',
+            validate: {
+                validator: function (value) {
+                    return !this.isMagazine || (value && value.length > 0);
+                },
+                message: 'El PDF es necesario para revistas',
+            },
         },
         isMagazine: {
             type: Boolean,

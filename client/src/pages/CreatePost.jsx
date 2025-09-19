@@ -205,6 +205,7 @@ export default function CreatePost() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(formData),
+                credentials: 'include'
             });
 
             const data = await res.json();

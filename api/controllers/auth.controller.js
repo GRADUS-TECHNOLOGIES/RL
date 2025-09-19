@@ -72,6 +72,8 @@ export const signin = async (req, res, next) => {
         // Guardar el token en una cookie y enviar la respuesta al cliente
         res.status(200).cookie('access_token', token, {
             httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
+            secure: process.env.NODE_ENV === 'production', // Importante para HTTPS
+            sameSite: 'strict', // Prevenir CSRF
         }).json(rest); // Responder con el usuario autenticado y el token
 
     } catch (error) {
@@ -106,6 +108,8 @@ export const google = async (req, res, next) => {
             const { password: pass, ...rest } = newUser._doc; // Desestructuración para excluir la contraseña del objeto de usuario
             res.status(200).cookie('access_token', token, {
                 httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
+                secure: process.env.NODE_ENV === 'production', // Importante para HTTPS
+                sameSite: 'strict', // Prevenir CSRF
             }).json(rest); // Responder con el usuario autenticado y el token
         }
     } catch (error) {
