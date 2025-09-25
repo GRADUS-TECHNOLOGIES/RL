@@ -21,7 +21,6 @@ import UpdatePost from './pages/UpdatePost.jsx'
 import PostPage from './pages/PostPage.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import Search from './pages/Search.jsx'
-import UnderConstructionPage2 from './pages/UnderConstPage.jsx'
 
 export default function App() {
   return (
@@ -29,7 +28,7 @@ export default function App() {
       <ScrollToTop />
       <Header />
       <Routes>
-        <Route path="/" element={<UnderConstructionPage2 />} />
+        <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
