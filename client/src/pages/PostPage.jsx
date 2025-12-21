@@ -26,6 +26,23 @@ export default function PostPage() {
     const [visiblePages, setVisiblePages] = useState(5);
     const pdfContainerRef = useRef(null);
 
+    const downloadPDF = async () => {
+        try {
+            const response = await fetch(post.pdf);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${post.title.replace(/\s+/g, '-')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Error descargando PDF:', error);
+        }
+    };
+
     useEffect(() => {
         const fetchPost = async () => {
             try {
@@ -141,97 +158,193 @@ export default function PostPage() {
     }
 
     return (
-        <main className="p-3 flex flex-col max-w-6xl mx-auto min-h-screen">
-            {/* Botón Editar (solo para admin y dueño del post) */}
-            {currentUser?.isAdmin && (
-                <div className="flex justify-end max-w-6xl mx-auto px-3">
-                    <Button
-                        onClick={() => navigate(`/update-post/${post._id}`)}
-                        className="mt-1 bg-white text-black border-2 rounded-full hover:rounded-l hover:text-[#b076ce] hover:bg-black dark:bg-white dark:hover:bg-black transition-all duration-300"
-                    >
-                        Editar Post
-                    </Button>
-                </div>
-            )}
-
-            <h1 className="text-3xl mt-10 p-3 text-center font-serif max-w-6xl mx-auto lg:text-4xl">
-                {post.title}
-            </h1>
-
-            <Link to={`/search?category=${post.category}`} className="self-center mt-5">
-                <Button pill size="xs" className="bg-white text-[#b076ce] border-2 hover:text-white hover:bg-[#b076ce] dark:bg-white dark:hover:bg-[#b076ce] transition-colors duration-300">
-                    {post.category}
-                </Button>
-            </Link>
-
-            {post.pdf ? (
-                <div className="mt-10 p-3 max-w-4xl mx-auto w-full bg-gray-100 rounded-lg shadow-md">
-                    <div className="flex justify-between items-center mb-2 p-2 bg-white rounded-t-lg border-b">
-                        <div className="flex items-center space-x-2">
-                            <button onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition" disabled={scale <= 0.5}>-</button>
-                            <span className="text-sm">Zoom: {(scale * 100).toFixed(0)}%</span>
-                            <button onClick={() => setScale(prev => Math.min(2.0, prev + 0.1))} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition" disabled={scale >= 2.0}>+</button>
-                        </div>
-                        <span className="text-sm text-gray-600">{loadedPages} de {totalPages} páginas cargadas</span>
+        <main className="min-h-screen bg-white dark:bg-gray-900 py-8">
+            <div className="max-w-4xl mx-auto px-4 md:px-8">
+                {/* Botón Editar (solo para admin) */}
+                {currentUser?.isAdmin && (
+                    <div className="flex justify-end mb-6">
+                        <Button
+                            onClick={() => navigate(`/update-post/${post._id}`)}
+                            className="bg-[#B076CE] hover:bg-black text-white font-semibold px-6 py-2 rounded-lg transition-all"
+                        >
+                            ✏️ Editar Post
+                        </Button>
                     </div>
+                )}
 
-                    {loadedPages < totalPages && (
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(loadedPages / totalPages) * 100}%` }}></div>
-                        </div>
+                {/* Título */}
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 text-center leading-tight">
+                    {post.title}
+                </h1>
+
+                {/* Categoría y metadata */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+                    <Link to={`/search?category=${post.category}`}>
+                        <span className="inline-block px-4 py-2 bg-[#B076CE] text-white text-sm font-semibold rounded-full hover:bg-black transition-all cursor-pointer">
+                            {post.category === 'uncategorized' ? 'Sin categoría' : post.category}
+                        </span>
+                    </Link>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">
+                        {new Date(post.createdAt).toLocaleDateString('es-ES', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })}
+                    </span>
+                    {!post.pdf && (
+                        <span className="text-gray-500 dark:text-gray-400 text-sm italic">
+                            {(post.content?.length / 1000).toFixed(0)} mins de lectura
+                        </span>
                     )}
+                </div>
 
-                    <div ref={pdfContainerRef} className="pdf-container h-[800px] overflow-y-auto bg-white" style={{ boxShadow: 'inset 0 0 8px rgba(0,0,0,0.1)' }}>
-                        {pdfPages.length > 0 ? (
-                            <div className="flex flex-col items-center p-4">
-                                {pdfPages.slice(0, visiblePages).map((page, index) => (
-                                    <div key={index} className="mb-6 last:mb-0 shadow-lg" style={{ width: '100%', maxWidth: '800px' }}>
-                                        <img src={page.dataUrl} alt={`Página ${index + 1}`} className="mx-auto border border-gray-200" style={{ width: `${page.width}px`, height: `${page.height}px` }} />
-                                        <div className="text-center text-sm text-gray-500 mt-1 bg-gray-50 py-1">Página {index + 1} de {pdfPages.length}</div>
+                {/* Imagen o PDF */}
+                {post.pdf ? (
+                    <div className="mb-12 bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                        {/* Encabezado del visor PDF */}
+                        <div className="bg-[#B076CE] px-6 py-4 border-b border-purple-800 dark:border-purple-900">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-2xl">📚</span>
+                                    <div>
+                                        <h3 className="text-white font-bold text-lg">Revista</h3>
+                                        <p className="text-purple-100 text-sm">{totalPages} página{totalPages !== 1 ? 's' : ''}</p>
                                     </div>
-                                ))}
-                                {visiblePages < pdfPages.length && (
-                                    <div className="text-center py-4 text-gray-500">Desplázate hacia abajo para cargar más páginas...</div>
-                                )}
+                                </div>
+                                <Button
+                                    onClick={downloadPDF}
+                                    className="bg-white hover:bg-purple-50 text-[#B076CE] font-semibold px-4 py-2 rounded-lg transition-all shadow-lg"
+                                >
+                                    ⬇️ Descargar
+                                </Button>
                             </div>
-                        ) : (
-                            <div className="h-full flex items-center justify-center">
-                                <Spinner size="xl" />
-                                <span className="ml-2">Cargando PDF...</span>
+                        </div>
+
+                        {/* Controles de zoom y progreso */}
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                            <div className="flex items-center gap-3">
+                                <button 
+                                    onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))} 
+                                    className="px-3 py-2 bg-white dark:bg-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition text-sm font-semibold text-gray-700 dark:text-gray-300"
+                                    disabled={scale <= 0.5}
+                                    title="Reducir zoom"
+                                >
+                                    🔍−
+                                </button>
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 py-2 bg-white dark:bg-gray-600 rounded-lg min-w-24 text-center">
+                                    {(scale * 100).toFixed(0)}%
+                                </span>
+                                <button 
+                                    onClick={() => setScale(prev => Math.min(2.0, prev + 0.1))} 
+                                    className="px-3 py-2 bg-white dark:bg-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition text-sm font-semibold text-gray-700 dark:text-gray-300"
+                                    disabled={scale >= 2.0}
+                                    title="Aumentar zoom"
+                                >
+                                    🔍+
+                                </button>
+                            </div>
+
+                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                <span className="bg-white dark:bg-gray-600 px-3 py-2 rounded-lg">
+                                    {loadedPages} de {totalPages} páginas cargadas
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Barra de progreso */}
+                        {loadedPages < totalPages && (
+                            <div className="w-full bg-gray-200 dark:bg-gray-600 h-1.5">
+                                <div 
+                                    className="bg-gradient-to-r from-[#B076CE] via-purple-600 to-purple-700 h-1.5 transition-all duration-300" 
+                                    style={{ width: `${(loadedPages / totalPages) * 100}%` }}
+                                />
                             </div>
                         )}
+
+                        {/* Contenedor del PDF */}
+                        <div 
+                            ref={pdfContainerRef} 
+                            className="pdf-container h-[850px] overflow-y-auto bg-gray-100 dark:bg-gray-900"
+                        >
+                            {pdfPages.length > 0 ? (
+                                <div className="flex flex-col items-center p-6 sm:p-8">
+                                    {pdfPages.slice(0, visiblePages).map((page, index) => (
+                                        <div 
+                                            key={index} 
+                                            className="mb-8 last:mb-0 bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 hover:shadow-2xl transition-shadow duration-300"
+                                            style={{ width: '100%', maxWidth: '820px' }}
+                                        >
+                                            <img 
+                                                src={page.dataUrl} 
+                                                alt={`Página ${index + 1}`} 
+                                                className="w-full" 
+                                                style={{ maxHeight: `${page.height}px` }}
+                                            />
+                                            <div className="text-center text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 py-3 font-semibold border-t border-gray-200 dark:border-gray-600">
+                                                📄 Página {index + 1} de {pdfPages.length}
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {visiblePages < pdfPages.length && (
+                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm font-medium animate-pulse">
+                                            👇 Desplázate hacia abajo para cargar más páginas...
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center gap-4">
+                                    <Spinner size="lg" className="text-[#B076CE]" />
+                                    <span className="text-gray-600 dark:text-gray-400 font-medium">Cargando revista...</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                ) : (
+                    <div className="mb-12 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+                        <img 
+                            src={post.image} 
+                            alt={post.title} 
+                            className="w-full h-auto object-cover max-h-[500px]"
+                        />
+                    </div>
+                )}
+
+                {/* Contenido del post */}
+                {!post.pdf && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-12 border border-gray-200 dark:border-gray-700 mb-12">
+                        <article
+                            className="prose prose-lg dark:prose-invert max-w-none post-content"
+                            dangerouslySetInnerHTML={{ __html: post.content }}
+                        />
+                    </div>
+                )}
+
+                {/* Call to Action */}
+                <div className="max-w-4xl mx-auto mb-12">
+                    <CallToAction />
                 </div>
-            ) : (
-                <img src={post.image} alt={post.title} className="mt-10 p-3 max-h-[600px] w-full object-cover" />
-            )}
 
-            <div className="flex justify-between p-3 border-b border-[#b076ce] mx-auto w-full max-w-2xl text-xs">
-                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                {!post.pdf && <span className="italic">{(post.content?.length / 1000).toFixed(0)} mins de lectura</span>}
-            </div>
+                {/* Comentarios */}
+                <div className="mb-12">
+                    <CommentSection postId={post._id} />
+                </div>
 
-            {!post.pdf && (
-                <div
-                    className="p-3 max-w-2xl mx-auto w-full post-content"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
-                />
-            )}
-
-            <div className="max-w-4xl mx-auto w-full">
-                <CallToAction />
-            </div>
-
-            <CommentSection postId={post._id} />
-
-            <div className="flex flex-col justify-center items-center mb-5">
-                <h1 className="text-xl mt-5">Artículos recientes</h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-5 justify-center w-full">
-                    {recentPosts.length > 0 ? (
-                        recentPosts.map((post) => <PostCard key={post._id} post={post} />)
-                    ) : (
-                        <p>Sin post recientes.</p>
-                    )}
+                {/* Posts recientes */}
+                <div className="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+                        Artículos recientes
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {recentPosts.length > 0 ? (
+                            recentPosts.map((recentPost) => (
+                                <PostCard key={recentPost._id} post={recentPost} />
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500 dark:text-gray-400 col-span-full py-8">
+                                Sin posts recientes
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
         </main>

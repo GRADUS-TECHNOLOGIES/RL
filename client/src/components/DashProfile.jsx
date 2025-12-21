@@ -1,4 +1,4 @@
-import { Alert, Button, Modal, ModalBody, ModalHeader, TextInput } from 'flowbite-react';
+import { Alert, Button, Modal, ModalBody, ModalHeader, TextInput, Card } from 'flowbite-react';
 import { useState, useRef, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
@@ -7,7 +7,7 @@ import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { updateStart, updateSuccess, updateFailure, deleteUserStart, deleteUserSuccess, deleteUserFailure, signoutSuccess } from '../redux/user/userSlice';
 import { useDispatch } from 'react-redux';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
+import { HiOutlineExclamationCircle, HiOutlinePencil, HiOutlineDocumentText, HiOutlineLogout, HiOutlineTrash } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
 
 export default function DashProfile() {
@@ -167,90 +167,164 @@ export default function DashProfile() {
     };
 
     return (
-        <div className='max-w-lg mx-auto p-3 w-full'>
-            <h1 className='my-7 text-center font-semibold text-3xl'>Mi perfil</h1>
-            <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
-                <input type="file" accept='image/*' onChange={handleImageChange} ref={filePickerRef} hidden />
-                <div className='relative w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full' onClick={() => filePickerRef.current.click()}>
-                    {imageFileUploadProgress && (
-                        <CircularProgressbar value={imageFileUploadProgress || 0} text={`${imageFileUploadProgress}%`}
-                            strokeWidth={5}
-                            styles={{
-                                root: {
-                                    width: '100%',
-                                    height: '100%',
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                },
-                                path: {
-                                    stroke: `rgba(62,152,199, ${imageFileUploadProgress / 100
-                                        })`,
-                                }
-                            }} />
-                    )}
-                    <img src={imageFileUrl || currentUser.profilePicture} alt="user" className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${imageFileUploadProgress && imageFileUploadProgress < 100 && 'opacity-60'}`} />
+        <div className='min-h-screen bg-white dark:bg-white p-6 w-full'>
+            <div className='w-full'>
+                {/* Encabezado */}
+                <div className='text-center mb-10'>
+                    <h1 className='text-4xl font-bold text-gray-900 dark:text-black mb-2'>Mi Perfil</h1>
+                    <p className='text-gray-600 dark:text-gray-600'>Gestiona tu información personal y acciones rápidas</p>
                 </div>
 
-                {imageFileUploadError && <Alert color='failure'>
-                    {imageFileUploadError}
-                </Alert>
-                }
+                <div className='grid grid-cols-1 xl:grid-cols-3 gap-6 w-full'>
+                    {/* Sección Izquierda - Perfil y Formulario */}
+                    <div className='xl:col-span-2 w-full'>
+                        <Card className='shadow-lg'>
+                            <form onSubmit={handleSubmit} className='space-y-6'>
+                                {/* Foto de Perfil */}
+                                <div>
+                                    <label className='block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center'>Foto de Perfil</label>
+                                    <input type="file" accept='image/*' onChange={handleImageChange} ref={filePickerRef} hidden />
+                                    <div className='flex justify-center'>
+                                        <div className='relative w-48 h-48 cursor-pointer shadow-md overflow-hidden rounded-full' onClick={() => filePickerRef.current.click()}>
+                                            {imageFileUploadProgress && (
+                                                <CircularProgressbar value={imageFileUploadProgress || 0} text={`${imageFileUploadProgress}%`}
+                                                    strokeWidth={5}
+                                                    styles={{
+                                                        root: {
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            left: 0,
+                                                        },
+                                                        path: {
+                                                            stroke: `rgba(62,152,199, ${imageFileUploadProgress / 100})`,
+                                                        }
+                                                    }} />
+                                            )}
+                                            <img src={imageFileUrl || currentUser.profilePicture} alt="user" className={`rounded-full w-full h-full object-cover border-8 border-[lightgray] ${imageFileUploadProgress && imageFileUploadProgress < 100 && 'opacity-60'}`} />
+                                        </div>
+                                    </div>
+                                    {imageFileUploadError && <Alert color='failure' className='mt-4'>
+                                        {imageFileUploadError}
+                                    </Alert>
+                                    }
+                                </div>
 
+                                {/* Campos de Formulario */}
+                                <div className='space-y-4'>
+                                    <div>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-700 mb-2'>Usuario</label>
+                                        <TextInput type='text' id='username' placeholder='Tu usuario' defaultValue={currentUser.username}
+                                            onChange={handleChange}
+                                            className='w-full'
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>Correo Electrónico</label>
+                                        <TextInput type='email' id='email' placeholder='tu@correo.com' defaultValue={currentUser.email}
+                                            onChange={handleChange}
+                                            className='w-full'
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>Contraseña</label>
+                                        <TextInput type='password' id='password' placeholder='Dejar en blanco para no cambiar'
+                                            onChange={handleChange}
+                                            className='w-full'
+                                        />
+                                    </div>
+                                </div>
 
-                <TextInput type='text' id='username' placeholder='Usuario' defaultValue={currentUser.username}
-                    onChange={handleChange}
-                />
-                <TextInput type='email' id='email' placeholder='Correo' defaultValue={currentUser.email}
-                    onChange={handleChange}
-                />
-                <TextInput type='password' id='password' placeholder='Contraseña'
-                    onChange={handleChange}
-                />
+                                {/* Alertas */}
+                                {updateUserSuccess && (
+                                    <Alert color='success' className='mt-4'>
+                                        {updateUserSuccess}
+                                    </Alert>
+                                )}
+                                {updateUserError && (
+                                    <Alert color='failure' className='mt-4'>
+                                        {updateUserError}
+                                    </Alert>
+                                )}
+                                {error && (
+                                    <Alert color='failure' className='mt-4'>
+                                        {error}
+                                    </Alert>
+                                )}
 
-                <Button
-                    type='submit'
-                    outline
-                    className='flex items-center justify-center w-full text-black border-black hover:bg-[#b076ce] hover:border-[#b076ce] hover:text-white rounded-tl-xl rounded-bl-none transition-all'
-                    disabled={loading || imageFileUploading}
-                >
-                    {loading ? 'Cargando...' : 'ACTUALIZAR'}
-                </Button>
+                                {/* Botón Actualizar */}
+                                <Button
+                                    type='submit'
+                                    className='w-full bg-[#B076CE] hover:bg-black text-white font-semibold py-3 rounded-lg transition-all'
+                                    disabled={loading || imageFileUploading}
+                                >
+                                    {loading ? 'Actualizando...' : 'Actualizar Perfil'}
+                                </Button>
+                            </form>
+                        </Card>
+                    </div>
 
-                {currentUser.isAdmin && (
-                    <Link to={'/create-post'}>
-                        <Button
-                            type='button'
-                            color='purple'
-                            className='flex items-center justify-center w-full bg-[#b076ce] text-white border-[#b076ce] hover:bg-black hover:border-black hover:text-[#b076ce] rounded-tl-xl rounded-bl-none transition-all'
-                        >
-                            CREAR POST
-                        </Button>
-                    </Link>
-                )}
-            </form>
+                    {/* Sección Derecha - Acciones Rápidas */}
+                    <div className='space-y-4 w-full'>
+                        {/* Acciones de Admin */}
+                        {currentUser.isAdmin && (
+                            <Card className='shadow-lg bg-gradient-to-br from-[#f0def8] to-[#ffffff] dark:from-purple-900 dark:to-purple-800'>
+                                <h2 className='text-lg font-bold text-black dark:text-white mb-4 flex items-center gap-2'>
+                                    <HiOutlineDocumentText className='w-5 h-5' />
+                                    Acciones Admin
+                                </h2>
+                                <div className='space-y-3'>
+                                    <Link to={'/create-post'} className='block'>
+                                        <Button
+                                            type='button'
+                                            className='w-full bg-[#B076CE] hover:bg-black text-white font-semibold py-3 transition-all flex items-center justify-center gap-2'
+                                        >
+                                            <HiOutlineDocumentText className='w-5 h-5' />
+                                            Crear Post / Cargar Revista
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </Card>
+                        )}
 
-            <div className='text-red-500 flex justify-between mt-5'>
-                <span onClick={() => setShowModal(true)} className='cursor-pointer hover:text-red-700 hover:underline'>Eliminar cuenta</span>
-                <span onClick={handleSignout} className='cursor-pointer hover:text-red-700 hover:underline'>Salir</span>
+                        {/* Card de Cuenta */}
+                        <Card className='shadow-lg'>
+                            <h2 className='text-lg font-bold text-gray-900 dark:text-white mb-4'>Gestión de Cuenta</h2>
+                            <div className='space-y-3'>
+                                <Button
+                                    type='button'
+                                    onClick={handleSignout}
+                                    className='w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 transition-all flex items-center justify-center gap-2'
+                                >
+                                    <HiOutlineLogout className='w-5 h-5' />
+                                    Cerrar Sesión
+                                </Button>
+                                <Button
+                                    type='button'
+                                    onClick={() => setShowModal(true)}
+                                    className='w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 transition-all flex items-center justify-center gap-2'
+                                >
+                                    <HiOutlineTrash className='w-5 h-5' />
+                                    Eliminar Cuenta
+                                </Button>
+                            </div>
+                        </Card>
+
+                        {/* Info de Usuario */}
+                        <Card className='shadow-lg'>
+                            <h3 className='text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3'>Información de Cuenta</h3>
+                            <div className='space-y-2 text-sm'>
+                                <p className='text-gray-600 dark:text-gray-400'><span className='font-medium'>ID:</span> {currentUser._id.slice(-8)}</p>
+                                <p className='text-gray-600 dark:text-gray-400'><span className='font-medium'>Estado:</span> <span className={`px-2 py-1 rounded text-white text-xs ${currentUser.isAdmin ? 'bg-[#B076CE]' : 'bg-[#880fc5]'}`}>{currentUser.isAdmin ? 'Administrador' : 'Usuario'}</span></p>
+                                <p className='text-gray-600 dark:text-gray-400'><span className='font-medium'>Miembro desde:</span> {new Date(currentUser.createdAt).toLocaleDateString()}</p>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
             </div>
 
-            {updateUserSuccess && (
-                <Alert color='success' className='mt-5'>
-                    {updateUserSuccess}
-                </Alert>
-            )}
-            {updateUserError && (
-                <Alert color='failure' className='mt-5'>
-                    {updateUserError}
-                </Alert>
-            )}
-            {error && (
-                <Alert color='failure' className='mt-5'>
-                    {error}
-                </Alert>
-            )}
-
+            {/* Modal de Confirmación */}
             <Modal
                 show={showModal}
                 onClose={() => setShowModal(false)}
@@ -260,10 +334,11 @@ export default function DashProfile() {
                 <ModalBody>
                     <div className='text-center'>
                         <HiOutlineExclamationCircle className='h-14 w-14 text-gray-500 dark:text-gray-200 mb-4 mx-auto' />
-                        <h3 className='mb-5 text-lg text-gray-500 dark:text-gray-400'>Seguro que quiere eliminar esta cuenta?</h3>
-                        <div className='flex justify-center gap-10'>
-                            <Button color='red' onClick={handleDeleteUser}>Si, estoy segur@</Button>
-                            <Button color='gray' onClick={() => setShowModal(false)}>No, cancelar</Button>
+                        <h3 className='mb-5 text-lg font-semibold text-gray-800 dark:text-gray-200'>¿Eliminar cuenta?</h3>
+                        <p className='text-sm text-gray-600 dark:text-gray-400 mb-6'>Esta acción no se puede deshacer. Todos tus datos serán eliminados permanentemente.</p>
+                        <div className='flex justify-center gap-4'>
+                            <Button color='red' onClick={handleDeleteUser} className='flex-1'>Sí, eliminar</Button>
+                            <Button color='gray' onClick={() => setShowModal(false)} className='flex-1'>Cancelar</Button>
                         </div>
                     </div>
                 </ModalBody>

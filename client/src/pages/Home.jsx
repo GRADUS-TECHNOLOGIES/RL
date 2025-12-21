@@ -16,76 +16,102 @@ const useDocumentTitle = (title) => {
 
 // Skeletons
 const CarouselSkeleton = () => (
-    <div className="w-full h-64 sm:h-80 md:h-96 lg:h-[420px] bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
-        <div className="text-gray-400 text-lg">Cargando carrusel...</div>
+    <div className="w-full h-64 sm:h-80 md:h-96 lg:h-[420px] bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+        <div className="text-gray-400 text-lg font-light">Cargando destacados...</div>
     </div>
 );
 
-// ✅ Barra de logo y navegación
-const LogoAndNav = () => (
-    <section className="w-full flex flex-col items-center mt-2">
-        {/* Logo como imagen */}
-        <img
-            src="/logoSingInUp.svg"   // <-- ajusta la ruta según donde tengas el archivo
-            alt="Revista Legislatura Logo"
-            className="w-auto h-20 sm:h-24 md:h-80"
-        />
+// Hero con logo estilo revista
+const HeroSection = () => (
+    <section className="w-full bg-gradient-to-b from-white to-gray-50 border-b-4 border-[#B076CE] py-8 md:py-12">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                {/* Logo */}
+                <div className="flex-shrink-0">
+                    <img
+                        src="/logoSingInUp.svg"
+                        alt="Revista Legislatura Logo"
+                        className="w-auto h-16 sm:h-20 md:h-28 hover:scale-105 transition-transform duration-300"
+                    />
+                </div>
 
-        {/* Línea negra con menú */}
-        <nav className="w-full border-t-2 border-b-2 border-black">
-            <ul className="flex justify-center gap-6 py-3 font-medium text-sm sm:text-base">
-                <li>
-                    <Link to="/" className="hover:underline">
-                        Inicio
-                    </Link>
-                </li>
-                <li>
-                    <Link to="/about" className="hover:underline">
-                        Conócenos
-                    </Link>
-                </li>
-                <li>
-                    <Link to="/services" className="hover:underline">
-                        Servicios
-                    </Link>
-                </li>
-                <li>
-                    <Link to="/purpose" className="hover:underline">
-                        Nosotros
-                    </Link>
-                </li>
-            </ul>
-        </nav>
+                {/* Tagline estilo revista */}
+                <div className="flex-1 text-center md:text-left">
+                    <p className="text-xs md:text-sm font-semibold text-[#B076CE] uppercase tracking-widest">
+                        Análisis Legislativo • Política • Electoral
+                    </p>
+                    <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mt-2 leading-tight">
+                        Revista <span className="text-[#B076CE]">Legislatura</span>
+                    </h1>
+                    <p className="text-gray-600 text-lg mt-3 font-light">
+                        Tu fuente confiable de información legislativa, análisis político y noticias de impacto en México.
+                    </p>
+                </div>
+            </div>
+        </div>
     </section>
 );
 
-// ✅ Sección de bienvenida
+// ✅ Sección de bienvenida mejorada
 const WelcomeSection = () => (
-    <section className="flex flex-col gap-6 px-4 sm:px-6 md:px-10 max-w mx-auto py-10">
-        <h1 className="text-black text-sm sm:text-base md:text-4xl text-center max-w-6xl mx-auto leading-relaxed">
-            Bienvenid@ a la primera revista especializada en materia legislativa, electoral y política en México.
-        </h1>
-        <div className="flex justify-center">
-            <Link
-                to="/search"
-                className="text-sm sm:text-base text-[#b076ce] font-bold hover:underline hover:text-[#9a5cb5] transition-colors"
-                aria-label="Ver todos los artículos"
-            >
-                Ver todos los artículos
-            </Link>
+    <section className="max-w-7xl mx-auto px-4 md:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            {/* Columna izquierda - Contenido principal */}
+            <div className="md:col-span-2 border-l-4 border-[#B076CE] pl-6">
+                <h2 className="text-sm font-bold text-[#B076CE] uppercase tracking-widest mb-3">
+                    Bienvenido
+                </h2>
+                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                    La primera revista especializada en materia legislativa y política en México
+                </h3>
+                <p className="text-gray-700 text-lg leading-relaxed mb-6 font-light">
+                    Descubre análisis profundos, investigaciones de datos y reportajes exclusivos sobre la actividad legislativa, 
+                    política electoral y decisiones que impactan al país.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <Link
+                        to="/search"
+                        className="px-6 py-3 bg-[#B076CE] text-white font-semibold rounded-lg hover:bg-purple-700 transition-all duration-300 text-center"
+                    >
+                        Explorar artículos
+                    </Link>
+                    <Link
+                        to="/about"
+                        className="px-6 py-3 border-2 border-[#B076CE] text-[#B076CE] font-semibold rounded-lg hover:bg-[#B076CE]/10 transition-all duration-300 text-center"
+                    >
+                        Conocer más
+                    </Link>
+                </div>
+            </div>
+
+            {/* Columna derecha - Estadísticas estilo revista */}
+            <div className="space-y-4">
+                <div className="bg-gradient-to-br from-[#B076CE]/10 to-purple-100/20 p-6 rounded-lg border border-[#B076CE]/20">
+                    <p className="text-sm font-semibold text-[#B076CE] uppercase">Contenido disponible</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">+500</p>
+                    <p className="text-gray-600 text-sm mt-1">Artículos y análisis</p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-100/20 to-pink-100/20 p-6 rounded-lg border border-purple-200/20">
+                    <p className="text-sm font-semibold text-purple-700 uppercase">Actualización</p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">Diaria</p>
+                    <p className="text-gray-600 text-sm mt-1">Noticias en tiempo real</p>
+                </div>
+            </div>
         </div>
-        <div className="p-1 max-w-4xl mx-auto">
+
+        {/* Call to Action */}
+        <div className="mt-12">
             <CallToAction />
         </div>
     </section>
 );
 
-// ✅ Sección de artículos recientes
+// ✅ Sección de artículos recientes estilo revista
 const RecentArticlesSection = ({ posts }) => {
     if (posts.length === 0) {
         return (
-            <section className="max-w-6xl mx-auto p-6 text-center">
-                <p className="text-[#545454] text-lg">
+            <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 text-center">
+                <p className="text-gray-600 text-lg font-light">
                     No hay artículos disponibles en este momento.
                 </p>
             </section>
@@ -93,26 +119,92 @@ const RecentArticlesSection = ({ posts }) => {
     }
 
     return (
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-            {/* 🔥 Encabezado con título a la izquierda y link a la derecha */}
-            <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">
-                    Artículos recientes
-                </h2>
-                <Link
-                    to="/search"
-                    className="text-md text-black hover:underline hover:text-[#9a5cb5] font-medium transition-all"
-                    aria-label="Ver todos los artículos"
-                >
-                    Más artículos
-                </Link>
+        <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 border-t-2 border-gray-200">
+            {/* Encabezado de sección estilo periódico */}
+            <div className="mb-12 pb-6 border-b-4 border-[#B076CE]">
+                <div className="flex items-baseline justify-between">
+                    <div>
+                        <p className="text-xs font-bold text-[#B076CE] uppercase tracking-widest mb-2">
+                            Lo más reciente
+                        </p>
+                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+                            Artículos destacados
+                        </h2>
+                    </div>
+                    <Link
+                        to="/search"
+                        className="text-[#B076CE] hover:text-purple-700 font-semibold text-sm uppercase tracking-wider transition-colors"
+                    >
+                        Ver todos →
+                    </Link>
+                </div>
             </div>
 
-            {/* 🔥 Grid de artículos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {posts.slice(0, 4).map((post) => (
-                    <PostCard key={post._id} post={post} />
-                ))}
+            {/* Grid de artículos con destaque del primero */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Artículo destacado (primero) - Más grande en desktop */}
+                {posts.length > 0 && (
+                    <div className="lg:col-span-2 lg:row-span-2">
+                        <Link to={`/post/${posts[0].slug}`} className="group block h-full">
+                            <div className="h-full bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+                                {posts[0].image && (
+                                    <div className="relative overflow-hidden h-64 md:h-80">
+                                        <img
+                                            src={posts[0].image}
+                                            alt={posts[0].title}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                    </div>
+                                )}
+                                <div className="p-6">
+                                    <span className="inline-block px-3 py-1 bg-[#B076CE] text-white text-xs font-bold rounded-full mb-4">
+                                        {posts[0].category === 'uncategorized' ? 'General' : posts[0].category}
+                                    </span>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#B076CE] transition-colors line-clamp-2">
+                                        {posts[0].title}
+                                    </h3>
+                                    <p className="text-gray-600 text-sm font-light">
+                                        {new Date(posts[0].createdAt).toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                )}
+
+                {/* Artículos secundarios - Grid en columna */}
+                <div className="lg:col-span-2 space-y-5">
+                    {posts.slice(1, 5).map((post, index) => (
+                        <Link key={post._id} to={`/post/${post.slug}`} className="group">
+                            <div className="flex gap-4 pb-4 border-b border-gray-100 hover:border-[#B076CE]/50 transition-colors">
+                                {/* Número estilo periódico */}
+                                <div className="text-5xl font-black text-gray-200 group-hover:text-[#B076CE]/20 transition-colors flex-shrink-0">
+                                    {index + 2 < 10 ? `0${index + 2}` : index + 2}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-xs font-bold text-[#B076CE] uppercase tracking-widest">
+                                        {post.category === 'uncategorized' ? 'General' : post.category}
+                                    </span>
+                                    <h4 className="text-lg font-bold text-gray-900 mt-1 group-hover:text-[#B076CE] transition-colors line-clamp-2">
+                                        {post.title}
+                                    </h4>
+                                    <p className="text-gray-600 text-xs mt-2 font-light">
+                                        {new Date(post.createdAt).toLocaleDateString('es-ES', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
             </div>
         </section>
     );
@@ -154,23 +246,26 @@ export default function Home() {
     }, [fetchPosts]);
 
     return (
-        <main className="min-h-screen">
-            {/* 🔥 Logo + Nav */}
-            <LogoAndNav />
+        <main className="min-h-screen bg-white">
+            {/* 🎯 Hero estilo revista */}
+            <HeroSection />
 
-            {/* 🔥 Carrusel al inicio */}
-            <section aria-labelledby="featured-posts-heading" className="relative">
+            {/* 🎯 Carrusel al inicio */}
+            <section aria-labelledby="featured-posts-heading" className="relative max-w-7xl mx-auto px-4 md:px-8 py-12">
+                <p className="text-xs font-bold text-[#B076CE] uppercase tracking-widest mb-4">
+                    Destacado de hoy
+                </p>
                 {loading ? (
                     <CarouselSkeleton />
                 ) : error ? (
-                    <div className="w-full h-64 sm:h-80 md:h-96 lg:h-[420px] flex items-center justify-center bg-gray-50">
+                    <div className="w-full h-64 sm:h-80 md:h-96 lg:h-[420px] flex items-center justify-center bg-gray-50 rounded-lg">
                         <div className="text-center p-6 max-w-md">
-                            <p className="text-red-500 mb-4">{error}</p>
+                            <p className="text-red-500 mb-4 font-light">{error}</p>
                             <button
                                 onClick={fetchPosts}
-                                className="text-[#b076ce] font-medium hover:underline"
+                                className="px-4 py-2 bg-[#B076CE] text-white font-semibold rounded-lg hover:bg-purple-700 transition-all"
                             >
-                                Reintentar cargar carrusel
+                                Reintentar
                             </button>
                         </div>
                     </div>
@@ -181,34 +276,47 @@ export default function Home() {
                 )}
             </section>
 
-            {/* ✅ Bienvenida */}
+            {/* ✅ Bienvenida estilo revista */}
             <WelcomeSection />
 
             {/* ✅ Artículos recientes */}
             {posts.length > 0 && <RecentArticlesSection posts={posts} />}
 
             {/* ✅ Gráfica de composición del Congreso */}
-            <CongressCompositionChart
-                senators={[
-                    { party: 'MORENA', count: 67 },
-                    { party: 'PAN', count: 21 },
-                    { party: 'PVEM', count: 14 },
-                    { party: 'PRI', count: 13 },
-                    { party: 'PT', count: 6 },
-                    { party: 'MC', count: 6 },
-                    { party: 'SP', count: 1 },
-                ]}
-                deputies={[
-                    { party: 'MORENA', count: 253 },
-                    { party: 'PAN', count: 71 },
-                    { party: 'PVEM', count: 62 },
-                    { party: 'PT', count: 49 },
-                    { party: 'PRI', count: 37 },
-                    { party: 'MC', count: 27 },
-                    { party: 'SP', count: 1 },
-                ]}
-                title="Composición Actual del Congreso"
-            />
+            <section className="max-w-7xl mx-auto px-4 md:px-8 py-16 border-t-2 border-gray-200">
+                <div className="mb-8 pb-6 border-b-4 border-[#B076CE]">
+                    <p className="text-xs font-bold text-[#B076CE] uppercase tracking-widest mb-2">
+                        Análisis
+                    </p>
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                        Composición del Congreso
+                    </h2>
+                </div>
+                <CongressCompositionChart
+                    senators={[
+                        { party: 'MORENA', count: 67 },
+                        { party: 'PAN', count: 21 },
+                        { party: 'PVEM', count: 14 },
+                        { party: 'PRI', count: 13 },
+                        { party: 'PT', count: 6 },
+                        { party: 'MC', count: 6 },
+                        { party: 'SP', count: 1 },
+                    ]}
+                    deputies={[
+                        { party: 'MORENA', count: 253 },
+                        { party: 'PAN', count: 71 },
+                        { party: 'PVEM', count: 62 },
+                        { party: 'PT', count: 49 },
+                        { party: 'PRI', count: 37 },
+                        { party: 'MC', count: 27 },
+                        { party: 'SP', count: 1 },
+                    ]}
+                    title="Composición Actual del Congreso"
+                />
+            </section>
+
+            {/* Footer espaciador */}
+            <div className="h-8"></div>
         </main>
     );
 }
