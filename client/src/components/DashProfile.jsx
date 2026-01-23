@@ -171,18 +171,18 @@ export default function DashProfile() {
             <div className='w-full'>
                 {/* Encabezado */}
                 <div className='text-center mb-10'>
-                    <h1 className='text-4xl font-bold text-gray-900 dark:text-black mb-2'>Mi Perfil</h1>
+                    <h1 className='text-4xl font-bold text-gray-900 dark:text-gray-900 mb-2'>Mi Perfil</h1>
                     <p className='text-gray-600 dark:text-gray-600'>Gestiona tu información personal y acciones rápidas</p>
                 </div>
 
                 <div className='grid grid-cols-1 xl:grid-cols-3 gap-6 w-full'>
                     {/* Sección Izquierda - Perfil y Formulario */}
                     <div className='xl:col-span-2 w-full'>
-                        <Card className='shadow-lg'>
+                        <Card className='bg-white dark:bg-white shadow-lg'>
                             <form onSubmit={handleSubmit} className='space-y-6'>
                                 {/* Foto de Perfil */}
                                 <div>
-                                    <label className='block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center'>Foto de Perfil</label>
+                                    <label className='block text-sm font-semibold text-gray-700 dark:text-gray-700 mb-4 text-center'>Foto de Perfil</label>
                                     <input type="file" accept='image/*' onChange={handleImageChange} ref={filePickerRef} hidden />
                                     <div className='flex justify-center'>
                                         <div className='relative w-48 h-48 cursor-pointer shadow-md overflow-hidden rounded-full' onClick={() => filePickerRef.current.click()}>
@@ -221,14 +221,14 @@ export default function DashProfile() {
                                         />
                                     </div>
                                     <div>
-                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>Correo Electrónico</label>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-700 mb-2'>Correo Electrónico</label>
                                         <TextInput type='email' id='email' placeholder='tu@correo.com' defaultValue={currentUser.email}
                                             onChange={handleChange}
                                             className='w-full'
                                         />
                                     </div>
                                     <div>
-                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>Contraseña</label>
+                                        <label className='block text-sm font-medium text-gray-700 dark:text-gray-700 mb-2'>Contraseña</label>
                                         <TextInput type='password' id='password' placeholder='Dejar en blanco para no cambiar'
                                             onChange={handleChange}
                                             className='w-full'
@@ -256,7 +256,7 @@ export default function DashProfile() {
                                 {/* Botón Actualizar */}
                                 <Button
                                     type='submit'
-                                    className='w-full bg-[#B076CE] hover:bg-black text-white font-semibold py-3 rounded-lg transition-all'
+                                    className='w-full bg-[#B076CE] dark:bg-[#B076CE] hover:bg-black dark:hover:bg-black text-white font-semibold py-3 rounded-lg transition-all'
                                     disabled={loading || imageFileUploading}
                                 >
                                     {loading ? 'Actualizando...' : 'Actualizar Perfil'}
@@ -269,8 +269,8 @@ export default function DashProfile() {
                     <div className='space-y-4 w-full'>
                         {/* Acciones de Admin */}
                         {currentUser.isAdmin && (
-                            <Card className='shadow-lg bg-gradient-to-br from-[#f0def8] to-[#ffffff] dark:from-purple-900 dark:to-purple-800'>
-                                <h2 className='text-lg font-bold text-black dark:text-white mb-4 flex items-center gap-2'>
+                            <Card className='shadow-lg bg-gradient-to-br from-[#f0def8] to-[#ffffff] dark:from-[#f0def8] dark:to-[#ffffff]'>
+                                <h2 className='text-lg font-bold text-black dark:text-black mb-4 flex items-center gap-2'>
                                     <HiOutlineDocumentText className='w-5 h-5' />
                                     Acciones Admin
                                 </h2>
@@ -278,7 +278,7 @@ export default function DashProfile() {
                                     <Link to={'/create-post'} className='block'>
                                         <Button
                                             type='button'
-                                            className='w-full bg-[#B076CE] hover:bg-black text-white font-semibold py-3 transition-all flex items-center justify-center gap-2'
+                                            className='w-full bg-[#B076CE] dark:bg-[#B076CE] hover:bg-black dark:hover:bg-black text-white font-semibold py-3 transition-all flex items-center justify-center gap-2'
                                         >
                                             <HiOutlineDocumentText className='w-5 h-5' />
                                             Crear Post / Cargar Revista
@@ -289,13 +289,13 @@ export default function DashProfile() {
                         )}
 
                         {/* Card de Cuenta */}
-                        <Card className='shadow-lg'>
-                            <h2 className='text-lg font-bold text-gray-900 dark:text-white mb-4'>Gestión de Cuenta</h2>
+                        <Card className='shadow-lg dark:bg-white'>
+                            <h2 className='text-lg font-bold text-black dark:text-black mb-4'>Gestión de Cuenta</h2>
                             <div className='space-y-3'>
                                 <Button
                                     type='button'
                                     onClick={handleSignout}
-                                    className='w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 transition-all flex items-center justify-center gap-2'
+                                    className='w-full bg-orange-600 hover:bg-orange-700 text-white dark:bg-orange-600 dark:hover:bg-orange-700 font-semibold py-2 transition-all flex items-center justify-center gap-2'
                                 >
                                     <HiOutlineLogout className='w-5 h-5' />
                                     Cerrar Sesión
@@ -303,7 +303,7 @@ export default function DashProfile() {
                                 <Button
                                     type='button'
                                     onClick={() => setShowModal(true)}
-                                    className='w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 transition-all flex items-center justify-center gap-2'
+                                    className='w-full bg-red-600 hover:bg-red-700 text-white dark:bg-red-600 dark:hover:bg-red-700 font-semibold py-2 transition-all flex items-center justify-center gap-2'
                                 >
                                     <HiOutlineTrash className='w-5 h-5' />
                                     Eliminar Cuenta
@@ -312,12 +312,12 @@ export default function DashProfile() {
                         </Card>
 
                         {/* Info de Usuario */}
-                        <Card className='shadow-lg'>
-                            <h3 className='text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3'>Información de Cuenta</h3>
+                        <Card className='shadow-lg dark:bg-white'>
+                            <h3 className='text-sm font-semibold text-gray-700 dark:text-gray-700 mb-3'>Información de Cuenta</h3>
                             <div className='space-y-2 text-sm'>
-                                <p className='text-gray-600 dark:text-gray-400'><span className='font-medium'>ID:</span> {currentUser._id.slice(-8)}</p>
-                                <p className='text-gray-600 dark:text-gray-400'><span className='font-medium'>Estado:</span> <span className={`px-2 py-1 rounded text-white text-xs ${currentUser.isAdmin ? 'bg-[#B076CE]' : 'bg-[#880fc5]'}`}>{currentUser.isAdmin ? 'Administrador' : 'Usuario'}</span></p>
-                                <p className='text-gray-600 dark:text-gray-400'><span className='font-medium'>Miembro desde:</span> {new Date(currentUser.createdAt).toLocaleDateString()}</p>
+                                <p className='text-gray-600 dark:text-gray-600'><span className='font-medium'>ID:</span> {currentUser._id.slice(-8)}</p>
+                                <p className='text-gray-600 dark:text-gray-600'><span className='font-medium'>Estado:</span> <span className={`px-2 py-1 rounded text-white text-xs ${currentUser.isAdmin ? 'bg-[#B076CE]' : 'bg-[#880fc5]'}`}>{currentUser.isAdmin ? 'Administrador' : 'Usuario'}</span></p>
+                                <p className='text-gray-600 dark:text-gray-600'><span className='font-medium'>Miembro desde:</span> {new Date(currentUser.createdAt).toLocaleDateString()}</p>
                             </div>
                         </Card>
                     </div>

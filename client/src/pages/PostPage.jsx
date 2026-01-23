@@ -158,7 +158,7 @@ export default function PostPage() {
     }
 
     return (
-        <main className="min-h-screen bg-white dark:bg-gray-900 py-8">
+        <main className="min-h-screen bg-white dark:bg-white py-8">
             <div className="max-w-4xl mx-auto px-4 md:px-8">
                 {/* Botón Editar (solo para admin) */}
                 {currentUser?.isAdmin && (
@@ -173,18 +173,18 @@ export default function PostPage() {
                 )}
 
                 {/* Título */}
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 text-center leading-tight">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-900 mb-6 text-center leading-tight">
                     {post.title}
                 </h1>
 
                 {/* Categoría y metadata */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 mb-8 pb-6 border-b border-gray-200 dark:border-gray-200">
                     <Link to={`/search?category=${post.category}`}>
                         <span className="inline-block px-4 py-2 bg-[#B076CE] text-white text-sm font-semibold rounded-full hover:bg-black transition-all cursor-pointer">
                             {post.category === 'uncategorized' ? 'Sin categoría' : post.category}
                         </span>
                     </Link>
-                    <span className="text-gray-500 dark:text-gray-400 text-sm">
+                    <span className="text-gray-500 dark:text-gray-600 text-sm">
                         {new Date(post.createdAt).toLocaleDateString('es-ES', { 
                             year: 'numeric', 
                             month: 'long', 
@@ -192,7 +192,7 @@ export default function PostPage() {
                         })}
                     </span>
                     {!post.pdf && (
-                        <span className="text-gray-500 dark:text-gray-400 text-sm italic">
+                        <span className="text-gray-500 dark:text-gray-600 text-sm italic">
                             {(post.content?.length / 1000).toFixed(0)} mins de lectura
                         </span>
                     )}
@@ -200,9 +200,9 @@ export default function PostPage() {
 
                 {/* Imagen o PDF */}
                 {post.pdf ? (
-                    <div className="mb-12 bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div className="mb-12 bg-white dark:bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-200">
                         {/* Encabezado del visor PDF */}
-                        <div className="bg-[#B076CE] px-6 py-4 border-b border-purple-800 dark:border-purple-900">
+                        <div className="bg-[#B076CE] px-6 py-4 border-b border-purple-800 dark:border-purple-700">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">📚</span>
@@ -221,22 +221,22 @@ export default function PostPage() {
                         </div>
 
                         {/* Controles de zoom y progreso */}
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 p-4 bg-gray-50 dark:bg-gray-50 border-b border-gray-200 dark:border-gray-200">
                             <div className="flex items-center gap-3">
                                 <button 
                                     onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))} 
-                                    className="px-3 py-2 bg-white dark:bg-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition text-sm font-semibold text-gray-700 dark:text-gray-300"
+                                    className="px-3 py-2 bg-white dark:bg-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-100 transition text-sm font-semibold text-gray-700 dark:text-gray-700"
                                     disabled={scale <= 0.5}
                                     title="Reducir zoom"
                                 >
                                     🔍−
                                 </button>
-                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 py-2 bg-white dark:bg-gray-600 rounded-lg min-w-24 text-center">
+                                <span className="text-sm font-semibold text-gray-700 dark:text-gray-700 px-3 py-2 bg-white dark:bg-white rounded-lg min-w-24 text-center">
                                     {(scale * 100).toFixed(0)}%
                                 </span>
                                 <button 
                                     onClick={() => setScale(prev => Math.min(2.0, prev + 0.1))} 
-                                    className="px-3 py-2 bg-white dark:bg-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-500 transition text-sm font-semibold text-gray-700 dark:text-gray-300"
+                                    className="px-3 py-2 bg-white dark:bg-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-100 transition text-sm font-semibold text-gray-700 dark:text-gray-700"
                                     disabled={scale >= 2.0}
                                     title="Aumentar zoom"
                                 >
@@ -244,8 +244,8 @@ export default function PostPage() {
                                 </button>
                             </div>
 
-                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                <span className="bg-white dark:bg-gray-600 px-3 py-2 rounded-lg">
+                            <div className="text-sm font-medium text-gray-600 dark:text-gray-600">
+                                <span className="bg-white dark:bg-white px-3 py-2 rounded-lg">
                                     {loadedPages} de {totalPages} páginas cargadas
                                 </span>
                             </div>
@@ -253,7 +253,7 @@ export default function PostPage() {
 
                         {/* Barra de progreso */}
                         {loadedPages < totalPages && (
-                            <div className="w-full bg-gray-200 dark:bg-gray-600 h-1.5">
+                            <div className="w-full bg-gray-200 dark:bg-gray-200 h-1.5">
                                 <div 
                                     className="bg-gradient-to-r from-[#B076CE] via-purple-600 to-purple-700 h-1.5 transition-all duration-300" 
                                     style={{ width: `${(loadedPages / totalPages) * 100}%` }}
@@ -264,14 +264,14 @@ export default function PostPage() {
                         {/* Contenedor del PDF */}
                         <div 
                             ref={pdfContainerRef} 
-                            className="pdf-container h-[850px] overflow-y-auto bg-gray-100 dark:bg-gray-900"
+                            className="pdf-container h-[850px] overflow-y-auto bg-gray-100 dark:bg-gray-50"
                         >
                             {pdfPages.length > 0 ? (
                                 <div className="flex flex-col items-center p-6 sm:p-8">
                                     {pdfPages.slice(0, visiblePages).map((page, index) => (
                                         <div 
                                             key={index} 
-                                            className="mb-8 last:mb-0 bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 hover:shadow-2xl transition-shadow duration-300"
+                                            className="mb-8 last:mb-0 bg-white dark:bg-white shadow-xl rounded-lg overflow-hidden border border-gray-300 dark:border-gray-200 hover:shadow-2xl transition-shadow duration-300"
                                             style={{ width: '100%', maxWidth: '820px' }}
                                         >
                                             <img 
@@ -280,13 +280,13 @@ export default function PostPage() {
                                                 className="w-full" 
                                                 style={{ maxHeight: `${page.height}px` }}
                                             />
-                                            <div className="text-center text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 py-3 font-semibold border-t border-gray-200 dark:border-gray-600">
+                                            <div className="text-center text-xs text-gray-600 dark:text-gray-600 bg-gray-100 dark:bg-gray-100 py-3 font-semibold border-t border-gray-200 dark:border-gray-200">
                                                 📄 Página {index + 1} de {pdfPages.length}
                                             </div>
                                         </div>
                                     ))}
                                     {visiblePages < pdfPages.length && (
-                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm font-medium animate-pulse">
+                                        <div className="text-center py-8 text-gray-500 dark:text-gray-600 text-sm font-medium animate-pulse">
                                             👇 Desplázate hacia abajo para cargar más páginas...
                                         </div>
                                     )}
@@ -294,13 +294,13 @@ export default function PostPage() {
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center gap-4">
                                     <Spinner size="lg" className="text-[#B076CE]" />
-                                    <span className="text-gray-600 dark:text-gray-400 font-medium">Cargando revista...</span>
+                                    <span className="text-gray-600 dark:text-gray-600 font-medium">Cargando revista...</span>
                                 </div>
                             )}
                         </div>
                     </div>
                 ) : (
-                    <div className="mb-12 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+                    <div className="mb-12 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-200">
                         <img 
                             src={post.image} 
                             alt={post.title} 
@@ -311,7 +311,7 @@ export default function PostPage() {
 
                 {/* Contenido del post */}
                 {!post.pdf && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-12 border border-gray-200 dark:border-gray-700 mb-12">
+                    <div className="bg-white dark:bg-white rounded-xl shadow-lg p-8 md:p-12 border border-gray-200 dark:border-gray-200 mb-12">
                         <article
                             className="prose prose-lg dark:prose-invert max-w-none post-content"
                             dangerouslySetInnerHTML={{ __html: post.content }}
@@ -330,8 +330,8 @@ export default function PostPage() {
                 </div>
 
                 {/* Posts recientes */}
-                <div className="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+                <div className="mt-16 pt-12 border-t border-gray-200 dark:border-gray-200">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-900 mb-8 text-center">
                         Artículos recientes
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -340,7 +340,7 @@ export default function PostPage() {
                                 <PostCard key={recentPost._id} post={recentPost} />
                             ))
                         ) : (
-                            <p className="text-center text-gray-500 dark:text-gray-400 col-span-full py-8">
+                            <p className="text-center text-gray-500 dark:text-gray-600 col-span-full py-8">
                                 Sin posts recientes
                             </p>
                         )}

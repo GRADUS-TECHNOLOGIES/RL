@@ -27,6 +27,7 @@ export default function CommentSection({ postId }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     content: comment,
                     postId,
@@ -40,6 +41,9 @@ export default function CommentSection({ postId }) {
                 setComment('');
                 setCommentError(null);
                 setComments([data, ...comments]);
+            } else if (res.status === 401) {
+                setCommentError('Sesión expirada. Vuelve a iniciar sesión.');
+                navigate('/sign-in');
             }
         } catch (error) {
             setCommentError(error.message);
@@ -70,6 +74,7 @@ export default function CommentSection({ postId }) {
             }
             const res = await fetch(`/api/comment/likeComment/${commentId}`, {
                 method: 'PUT',
+                credentials: 'include',
             });
             if (res.ok) {
                 const data = await res.json();
@@ -83,6 +88,8 @@ export default function CommentSection({ postId }) {
                         : comment
                 )
                 );
+            } else if (res.status === 401) {
+                navigate('/sign-in');
             }
         } catch (error) {
             console.log(error.message);
@@ -109,10 +116,13 @@ export default function CommentSection({ postId }) {
             }
             const res = await fetch(`/api/comment/deleteComment/${commentId}`, {
                 method: 'DELETE',
+                credentials: 'include',
             });
             if (res.ok) {
                 const data = await res.json();
                 setComments(comments.filter((comment) => comment._id !== commentId));
+            } else if (res.status === 401) {
+                navigate('/sign-in');
             }
         } catch (error) {
             console.log(error.message);

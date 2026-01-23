@@ -64,7 +64,11 @@ export const signin = async (req, res, next) => {
         }
 
         // Crear un token JWT para el usuario autenticado
-        const token = jwt.sign({ id: validUser._id, isAdmin: validUser.isAdmin }, process.env.JWT_SECRET);
+        const token = jwt.sign(
+            { id: validUser._id, isAdmin: validUser.isAdmin },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
 
         // Desestructuración para excluir la contraseña del objeto de usuario
         const { password: pass, ...rest } = validUser._doc;
@@ -73,7 +77,8 @@ export const signin = async (req, res, next) => {
         res.status(200).cookie('access_token', token, {
             httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
             secure: process.env.NODE_ENV === 'production', // Importante para HTTPS
-            sameSite: 'strict', // Prevenir CSRF
+            sameSite: 'lax', // Evita problemas de navegación cruzada manteniendo protección CSRF básica
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
         }).json(rest); // Responder con el usuario autenticado y el token
 
     } catch (error) {
@@ -89,10 +94,17 @@ export const google = async (req, res, next) => {
         const user = await User.findOne({ email }); // Buscar el usuario en la base de datos por su correo electrónico
 
         if (user) {
-            const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET); // Crear un token JWT para el usuario existente
+            const token = jwt.sign(
+                { id: user._id, isAdmin: user.isAdmin },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            ); // Crear un token JWT para el usuario existente
             const { password: pass, ...rest } = user._doc; // Desestructuración para excluir la contraseña del objeto de usuario
             res.status(200).cookie('access_token', token, {
                 httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
             }).json(rest); // Responder con el usuario autenticado y el token
         } else {
             const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8); // Generar una contraseña aleatoria
@@ -104,12 +116,17 @@ export const google = async (req, res, next) => {
                 profilePicture: googlePhotoUrl
             });
             await newUser.save(); // Guardar el nuevo usuario en la base de datos
-            const token = jwt.sign({ id: newUser._id, isAdmin: newUser.isAdmin }, process.env.JWT_SECRET); // Crear un token JWT para el nuevo usuario
+            const token = jwt.sign(
+                { id: newUser._id, isAdmin: newUser.isAdmin },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            ); // Crear un token JWT para el nuevo usuario
             const { password: pass, ...rest } = newUser._doc; // Desestructuración para excluir la contraseña del objeto de usuario
             res.status(200).cookie('access_token', token, {
                 httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
                 secure: process.env.NODE_ENV === 'production', // Importante para HTTPS
-                sameSite: 'strict', // Prevenir CSRF
+                sameSite: 'lax', // Prevenir CSRF
+                maxAge: 7 * 24 * 60 * 60 * 1000,
             }).json(rest); // Responder con el usuario autenticado y el token
         }
     } catch (error) {

@@ -228,12 +228,12 @@ export default function CreatePost() {
                 {/* Encabezado */}
                 <div className='mb-8'>
                     <h1 className='text-4xl font-bold text-black dark:text-black mb-2'>Crear publicación</h1>
-                    <p className='text-gray-600 dark:text-gray-400'>Redacta tu artículo o carga una revista con vista previa en tiempo real</p>
+                    <p className='text-gray-600 dark:text-gray-600'>Redacta tu artículo o carga una revista con vista previa en tiempo real</p>
                 </div>
 
                 <form className='flex flex-col gap-6' onSubmit={handleSubmit}>
                     {/* Título y categoría */}
-                    <div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700'>
+                    <div className='bg-white dark:bg-white rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-100'>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <TextInput
                                 type="text"
@@ -309,7 +309,7 @@ export default function CreatePost() {
                     {!isMagazineMode && (
                         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[600px]'>
                             {/* Editor (Izquierda) */}
-                            <div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col'>
+                            <div className='bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-100 flex flex-col'>
                                 <div className='bg-[#B076CE] p-4 border-b border-black'>
                                     <h2 className='text-white font-semibold flex items-center gap-2'>
                                         ✏️ Editor
@@ -320,7 +320,7 @@ export default function CreatePost() {
                                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                                     <div className="flex flex-col gap-3">
                                         <div className="flex flex-col gap-1">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Selecciona una imagen</label>
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-700">Selecciona una imagen</label>
                                             <FileInput
                                                 type="file"
                                                 accept="image/*"
@@ -350,7 +350,7 @@ export default function CreatePost() {
                                     <div className="flex-shrink-0">
                                         <EditorToolbar editor={editor} />
                                     </div>
-                                    <div className="flex-1 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900">
+                                    <div className="flex-1 overflow-y-auto border border-gray-300 dark:border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-50">
                                         <EditorContent
                                             editor={editor}
                                             className="ProseMirror h-full"
@@ -362,7 +362,7 @@ export default function CreatePost() {
                             </div>
 
                             {/* Preview (Derecha) */}
-                            <div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col'>
+                            <div className='bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-100 flex flex-col'>
                                 <div className='bg-black p-4 border-b border-[#B076CE]'>
                                     <h2 className='text-white font-semibold flex items-center gap-2'>
                                         👁️ Vista previa
@@ -372,7 +372,7 @@ export default function CreatePost() {
                                 <div className="flex-1 overflow-auto p-6">
                                     {/* Imagen */}
                                     {formData.image && (
-                                        <div className="mb-6 rounded-lg overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
+                                        <div className="mb-6 rounded-lg overflow-hidden shadow-md border border-gray-200 dark:border-gray-200">
                                             <img
                                                 src={formData.image}
                                                 alt="Vista previa"
@@ -382,12 +382,12 @@ export default function CreatePost() {
                                     )}
 
                                     {/* Título */}
-                                    <h1 className='text-3xl font-bold text-gray-900 dark:text-white mb-3'>
+                                    <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-900 mb-3'>
                                         {formData.title || 'Título del post'}
                                     </h1>
 
                                     {/* Categoría y metadata */}
-                                    <div className='flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700'>
+                                    <div className='flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-200'>
                                         <span className='px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 text-xs font-semibold rounded-full capitalize'>
                                             {formData.category === 'uncategorized' ? 'Sin categoría' : formData.category}
                                         </span>

@@ -20,7 +20,9 @@ export const verifyToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
-            return next(errorHandler(403, "Unauthorized - Token inválido"));
+            // Limpia la cookie para evitar sesiones atascadas cuando el token expira o es inválido
+            res.clearCookie('access_token');
+            return next(errorHandler(401, "Sesión expirada. Vuelve a iniciar sesión"));
         }
 
         req.user = user;
