@@ -19,13 +19,16 @@ export default function OAuth() {
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({ prompt: 'select_account' });
 
+            // Paso 1: Firebase auth
             const result = await signInWithPopup(auth, provider);
             const user   = result.user;
 
+            // Paso 2: API propia
             const res  = await fetch('/api/auth/google', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({
+                credentials: 'include',
+                body: JSON.stringify({
                     name:           user.displayName,
                     email:          user.email,
                     googlePhotoUrl: user.photoURL,
@@ -37,24 +40,19 @@ export default function OAuth() {
                 dispatch(signinSuccess(data));
                 navigate('/');
             } else {
-                setError(data.message || 'Error al iniciar sesión');
+                setError(`Error del servidor (${res.status}): ${data.message || 'Sin detalle'}`);
             }
         } catch (err) {
-            if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-                // El usuario cerró el popup — no mostrar error
-            } else if (err.code === 'auth/popup-blocked') {
-                setError('El navegador bloqueó la ventana. Permite las ventanas emergentes para este sitio.');
-            } else {
-                setError('Error al iniciar sesión con Google. Intenta de nuevo.');
-                console.error(err);
-            }
+            // Mostrar TODOS los errores con código para diagnóstico
+            setError(`[${err.code || 'ERROR'}] ${err.message}`);
+            console.error('OAuth error:', err);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
             <button
                 type="button"
                 onClick={handleGoogleClick}
@@ -78,7 +76,9 @@ export default function OAuth() {
             </button>
 
             {error && (
-                <p className="text-[10px] text-red-400 font-light text-center leading-relaxed">{error}</p>
+                <div className="border border-red-100 bg-red-50 px-3 py-2">
+                    <p className="text-xs text-red-600 font-mono break-all">{error}</p>
+                </div>
             )}
         </div>
     );
