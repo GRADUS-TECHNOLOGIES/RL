@@ -1,6 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 @import "tailwindcss";
+
+/* Carousel progress bar */
+@keyframes carousel-progress {
+    from { width: 0%; }
+    to   { width: 100%; }
+}
+.carousel-progress {
+    animation: carousel-progress 8s linear forwards;
+}
 @plugin 'tailwind-scrollbar';
 @plugin "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";

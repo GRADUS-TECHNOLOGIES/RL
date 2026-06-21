@@ -1,5 +1,6 @@
 import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js";
+import { sanitizeContent } from "../utils/sanitize.js";
 
 export const create = async (req, res, next) => {
     if (!req.user.isAdmin) {
@@ -26,9 +27,10 @@ export const create = async (req, res, next) => {
         .toLowerCase()
         .replace(/[^a-zA-Z0-9-]/g, '-');
 
-    // Crear el nuevo post
+    // Crear el nuevo post (sanitizar el contenido HTML antes de persistir)
     const newPost = new Post({
         ...req.body,
+        content: sanitizeContent(req.body.content),
         slug,
         userId: req.user.id,
     });
@@ -136,7 +138,7 @@ export const updatepost = async (req, res, next) => {
             {
                 $set: {
                     title: req.body.title,
-                    content: req.body.content,
+                    content: sanitizeContent(req.body.content),
                     category: req.body.category,
                     image: req.body.image,
                     pdf: req.body.pdf,

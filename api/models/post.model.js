@@ -53,6 +53,12 @@ const postSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// Índices para búsquedas frecuentes y ordenamiento
+// (slug y title ya tienen índice implícito por unique:true)
+postSchema.index({ category: 1, updatedAt: -1 });       // Filtro por categoría + orden
+postSchema.index({ userId: 1 });                        // Posts de un usuario
+postSchema.index({ title: 'text', content: 'text' });   // Full-text search
+
 const Post = mongoose.model('Post', postSchema);
 
 export default Post;

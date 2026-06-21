@@ -1,6 +1,4 @@
 import {
-    Button,
-    TextInput,
     Dropdown,
     Avatar,
     DropdownHeader,
@@ -8,12 +6,22 @@ import {
     DropdownDivider,
 } from 'flowbite-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AiOutlineSearch, AiOutlineMail, AiOutlineClose, AiOutlineMenu } from 'react-icons/ai';
+import { AiOutlineSearch, AiOutlineClose, AiOutlineMenu } from 'react-icons/ai';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState, useCallback } from 'react';
 import { signoutSuccess } from '../redux/user/userSlice';
 
-// ✅ Componente: Dropdown de usuario
+// ── Datos de navegación ────────────────────────────────────────────────────
+
+const navLinks = [
+    { to: '/',        label: 'Inicio'    },
+    { to: '/about',   label: 'Conócenos' },
+    { to: '/purpose', label: 'Propósito' },
+    { to: '/services',label: 'Servicios' },
+];
+
+// ── Dropdown de usuario ────────────────────────────────────────────────────
+
 const UserDropdown = ({ currentUser, onSignout }) => (
     <Dropdown
         arrowIcon={false}
@@ -26,269 +34,290 @@ const UserDropdown = ({ currentUser, onSignout }) => (
                     'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'
                 }
                 rounded
-                className='cursor-pointer hover:ring-2 hover:ring-[#B076CE] transition-all'
+                size="sm"
+                className="cursor-pointer ring-2 ring-transparent hover:ring-[#B076CE] transition-all duration-200"
             />
         }
     >
         <DropdownHeader>
-            <span className="block text-sm font-semibold">{currentUser.username}</span>
+            <span className="block text-sm font-bold text-gray-900">{currentUser.username}</span>
             <span className="block text-xs text-gray-500 truncate">{currentUser.email}</span>
         </DropdownHeader>
         <Link to="/dashboard?tab=profile">
             <DropdownItem>Perfil</DropdownItem>
         </Link>
         <DropdownDivider />
-        <DropdownItem onClick={onSignout}>Salir</DropdownItem>
+        <DropdownItem onClick={onSignout}>Cerrar sesión</DropdownItem>
     </Dropdown>
 );
 
-// ✅ Enlaces de navegación principales
-const navLinks = [
-    { to: '/', label: 'Inicio' },
-    { to: '/about', label: 'Conócenos' },
-    { to: '/purpose', label: 'Propósito' },
-    { to: '/services', label: 'Servicios' },
-];
+// ── Componente principal ───────────────────────────────────────────────────
 
 export default function Header() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
+    const location     = useLocation();
+    const navigate     = useNavigate();
+    const dispatch     = useDispatch();
     const { currentUser } = useSelector((state) => state.user);
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm,      setSearchTerm]      = useState('');
     const [isSearchVisible, setIsSearchVisible] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
+    const [isMenuOpen,      setIsMenuOpen]      = useState(false);
+    const [scrolled,        setScrolled]        = useState(false);
 
-    // 🔄 Scroll effect
+    // Efecto sombra en scroll
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        const onScroll = () => setScrolled(window.scrollY > 10);
+        window.addEventListener('scroll', onScroll);
+        return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    // 🔍 Sync search term from URL
+    // Sincronizar searchTerm con URL
     useEffect(() => {
-        const urlParams = new URLSearchParams(location.search);
-        const term = urlParams.get('searchTerm') || '';
-        setSearchTerm(term);
+        const p = new URLSearchParams(location.search);
+        setSearchTerm(p.get('searchTerm') || '');
     }, [location.search]);
 
-    // 🚪 Sign out handler
+    // Cerrar menú al cambiar ruta
+    useEffect(() => {
+        setIsMenuOpen(false);
+        setIsSearchVisible(false);
+    }, [location.pathname]);
+
     const handleSignout = useCallback(async () => {
         try {
-            const res = await fetch('/api/user/signout', { method: 'POST' });
+            const res  = await fetch('/api/user/signout', { method: 'POST' });
             const data = await res.json();
-
-            if (!res.ok) {
-                console.error('Error al cerrar sesión:', data.message);
-                return;
-            }
-
+            if (!res.ok) { console.error('Error al cerrar sesión:', data.message); return; }
             dispatch(signoutSuccess());
             navigate('/sign-in');
-            setIsMenuOpen(false);
-        } catch (error) {
-            console.error('Error inesperado:', error.message);
+        } catch (err) {
+            console.error('Error inesperado:', err.message);
         }
     }, [dispatch, navigate]);
 
-    // 🔎 Submit search
-    const handleSubmit = useCallback(
-        (e) => {
-            e.preventDefault();
-            if (!searchTerm.trim()) return;
+    const handleSubmit = useCallback((e) => {
+        e.preventDefault();
+        if (!searchTerm.trim()) return;
+        const params = new URLSearchParams(location.search);
+        params.set('searchTerm', searchTerm.trim());
+        navigate(`/search?${params.toString()}`);
+        setIsSearchVisible(false);
+        setIsMenuOpen(false);
+    }, [searchTerm, location.search, navigate]);
 
-            const urlParams = new URLSearchParams(location.search);
-            urlParams.set('searchTerm', searchTerm.trim());
-            navigate(`/search?${urlParams.toString()}`);
-            setIsSearchVisible(false);
-            setIsMenuOpen(false);
-        },
-        [searchTerm, location.search, navigate]
-    );
+    const isActive = (path) => location.pathname === path;
 
     return (
         <header
-            className={`sticky top-0 z-50 transition-all duration-300 ${
-                scrolled
-                    ? 'bg-white shadow-lg'
-                    : 'bg-white border-b-2 border-gray-100'
+            className={`sticky top-0 z-50 bg-white transition-all duration-300 ${
+                scrolled ? 'border-b border-gray-200 shadow-sm' : 'border-b border-gray-100'
             }`}
         >
-            <div className='max-w-7xl mx-auto px-4 md:px-8'>
-                <div className='flex items-center justify-between py-4'>
-                    {/* ✅ IZQUIERDA: Logo */}
-                    <Link to="/" className='flex-shrink-0 flex items-center gap-3 group'>
-                        <img 
-                            src="/logoNavbar.svg" 
-                            alt="Revista Legislatura" 
-                            className='h-10 w-auto transition-transform duration-300 group-hover:scale-110' 
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+                <div className="flex items-center justify-between h-14 md:h-[60px]">
+
+                    {/* ── Logo ── */}
+                    <Link to="/" className="flex-shrink-0">
+                        <img
+                            src="/logoNavbar.svg"
+                            alt="Revista Legislatura"
+                            className="h-8 md:h-9 w-auto"
                         />
                     </Link>
 
-                    {/* ✅ CENTRO: Navegación principal (solo desktop) */}
-                    <nav className='hidden md:flex items-center gap-1'>
+                    {/* ── Navegación desktop ── */}
+                    <nav className="hidden md:flex items-center h-full">
                         {navLinks.map(({ to, label }) => (
-                            <Link key={to} to={to}>
-                                <button
-                                    className={`px-4 py-2 rounded-lg transition-all duration-300 font-medium ${
-                                        location.pathname === to
-                                            ? 'text-white bg-[#B076CE]'
-                                            : 'text-gray-700 hover:text-[#B076CE] hover:bg-[#B076CE]/10'
+                            <Link
+                                key={to}
+                                to={to}
+                                className={`relative h-full flex items-center px-4 text-[13px] font-semibold tracking-wide transition-colors duration-200 group ${
+                                    isActive(to)
+                                        ? 'text-[#B076CE]'
+                                        : 'text-gray-600 hover:text-[#B076CE]'
+                                }`}
+                            >
+                                {label}
+                                {/* Indicador inferior */}
+                                <span
+                                    className={`absolute bottom-0 left-3 right-3 h-[2px] bg-[#B076CE] transition-all duration-200 ${
+                                        isActive(to)
+                                            ? 'opacity-100'
+                                            : 'opacity-0 group-hover:opacity-30'
                                     }`}
-                                >
-                                    {label}
-                                </button>
+                                />
                             </Link>
                         ))}
                     </nav>
 
-                    {/* ✅ DERECHA: Búsqueda + Usuario + Menú */}
-                    <div className='flex items-center gap-2 md:gap-4'>
-                        {/* Búsqueda */}
-                        {!isSearchVisible ? (
-                            <button
-                                onClick={() => setIsSearchVisible(true)}
-                                className='p-2 rounded-lg text-gray-700 hover:bg-[#B076CE]/10 hover:text-[#B076CE] transition-all'
-                                aria-label="Abrir búsqueda"
-                            >
-                                <AiOutlineSearch size={22} />
-                            </button>
-                        ) : (
-                            <div className='hidden md:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1'>
-                                <input
-                                    type="text"
-                                    placeholder="Buscar..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
-                                    className='bg-transparent border-none outline-none text-gray-700 placeholder-gray-500 w-48'
-                                    autoFocus
-                                />
-                                <button
-                                    onClick={handleSubmit}
-                                    className='p-1 text-[#B076CE] hover:text-purple-700 transition-all'
-                                    aria-label="Buscar"
-                                >
-                                    <AiOutlineSearch size={20} />
-                                </button>
-                                <button
-                                    onClick={() => setIsSearchVisible(false)}
-                                    className='p-1 text-gray-500 hover:text-gray-700 transition-all'
-                                    aria-label="Cerrar búsqueda"
-                                >
-                                    <AiOutlineClose size={18} />
-                                </button>
-                            </div>
-                        )}
+                    {/* ── Acciones desktop + móvil ── */}
+                    <div className="flex items-center gap-1">
 
-                        {/* Usuario - Desktop */}
-                        <div className='hidden sm:block'>
+                        {/* Búsqueda desktop */}
+                        <div className="hidden md:flex items-center">
+                            {isSearchVisible ? (
+                                <form
+                                    onSubmit={handleSubmit}
+                                    className="flex items-center gap-2 border-b border-gray-800 pb-0.5 mr-2"
+                                >
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        autoFocus
+                                        className="bg-transparent border-none outline-none text-[13px] text-gray-900 placeholder-gray-400 font-light w-44"
+                                    />
+                                    <button
+                                        type="submit"
+                                        aria-label="Buscar"
+                                        className="text-gray-500 hover:text-[#B076CE] transition-colors"
+                                    >
+                                        <AiOutlineSearch size={16} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSearchVisible(false)}
+                                        aria-label="Cerrar búsqueda"
+                                        className="text-gray-400 hover:text-gray-700 transition-colors"
+                                    >
+                                        <AiOutlineClose size={14} />
+                                    </button>
+                                </form>
+                            ) : (
+                                <button
+                                    onClick={() => setIsSearchVisible(true)}
+                                    aria-label="Buscar"
+                                    className="p-2 text-gray-500 hover:text-[#B076CE] transition-colors"
+                                >
+                                    <AiOutlineSearch size={18} />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Usuario desktop */}
+                        <div className="hidden md:flex items-center ml-1">
                             {currentUser ? (
                                 <UserDropdown currentUser={currentUser} onSignout={handleSignout} />
                             ) : (
-                                <Link to="/sign-in">
-                                    <Button className='bg-[#B076CE] hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg transition-all'>
-                                        Ingresar
-                                    </Button>
+                                <Link
+                                    to="/sign-in"
+                                    className="px-4 py-1.5 border border-gray-900 text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#B076CE] hover:border-[#B076CE] hover:text-white transition-all duration-200"
+                                >
+                                    Ingresar
                                 </Link>
                             )}
                         </div>
 
-                        {/* Botón menú móvil */}
+                        {/* Botón hamburger móvil */}
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className='md:hidden p-2 rounded-lg text-gray-700 hover:bg-[#B076CE]/10 transition-all'
-                            aria-label="Menú"
+                            aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+                            className="md:hidden p-2 text-gray-600 hover:text-[#B076CE] transition-colors"
                         >
-                            {isMenuOpen ? <AiOutlineClose size={24} /> : <AiOutlineMenu size={24} />}
+                            {isMenuOpen
+                                ? <AiOutlineClose size={21} />
+                                : <AiOutlineMenu size={21} />
+                            }
                         </button>
                     </div>
                 </div>
 
-                {/* ✅ MENÚ MÓVIL */}
+                {/* ── Menú móvil ── */}
                 {isMenuOpen && (
-                    <div className='md:hidden pb-4 border-t border-gray-100 pt-4 space-y-4 animate-in fade-in slide-in-from-top-2'>
+                    <div className="md:hidden border-t border-gray-100 py-5 space-y-5">
+
                         {/* Búsqueda móvil */}
-                        <form onSubmit={handleSubmit} className='flex gap-2'>
+                        <form
+                            onSubmit={handleSubmit}
+                            className="flex items-center gap-2 border-b border-gray-200 pb-2"
+                        >
+                            <AiOutlineSearch size={16} className="text-gray-400 flex-shrink-0" />
                             <input
                                 type="text"
-                                placeholder="Buscar..."
+                                placeholder="Buscar artículos..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className='flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#B076CE] focus:ring-2 focus:ring-[#B076CE]/20'
+                                className="flex-1 bg-transparent border-none outline-none text-[13px] text-gray-900 placeholder-gray-400 font-light"
                             />
-                            <button
-                                type="submit"
-                                className='p-2 bg-[#B076CE] text-white rounded-lg hover:bg-purple-700 transition-all'
-                            >
-                                <AiOutlineSearch size={20} />
-                            </button>
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm('')}
+                                    className="text-gray-400"
+                                >
+                                    <AiOutlineClose size={13} />
+                                </button>
+                            )}
                         </form>
 
-                        {/* Enlaces de navegación */}
-                        <nav className='flex flex-col gap-2'>
+                        {/* Links de navegación móvil */}
+                        <nav className="flex flex-col">
                             {navLinks.map(({ to, label }) => (
                                 <Link
                                     key={to}
                                     to={to}
                                     onClick={() => setIsMenuOpen(false)}
-                                    className={`px-4 py-3 rounded-lg transition-all font-medium ${
-                                        location.pathname === to
-                                            ? 'text-white bg-[#B076CE]'
-                                            : 'text-gray-700 hover:bg-[#B076CE]/10 hover:text-[#B076CE]'
+                                    className={`flex items-center gap-2 py-3 text-sm font-semibold border-b border-gray-50 transition-colors ${
+                                        isActive(to)
+                                            ? 'text-[#B076CE]'
+                                            : 'text-gray-700 hover:text-[#B076CE]'
                                     }`}
                                 >
+                                    {isActive(to) && (
+                                        <span className="w-1 h-1 rounded-full bg-[#B076CE] flex-shrink-0" />
+                                    )}
                                     {label}
                                 </Link>
                             ))}
                         </nav>
 
-                        {/* Botones de acción móvil */}
-                        <div className='flex flex-col gap-2 pt-2'>
-                            <Link to="/construccion" className='w-full'>
-                                <Button className='w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all flex items-center justify-center gap-2'>
-                                    <AiOutlineMail size={18} />
-                                    Contacto
-                                </Button>
-                            </Link>
-                            <Link to="/construccion" className='w-full'>
-                                <Button className='w-full bg-[#B076CE] hover:bg-purple-700 text-white font-semibold rounded-lg transition-all'>
-                                    Anúnciate
-                                </Button>
-                            </Link>
-                        </div>
-
                         {/* Usuario móvil */}
-                        <div className='pt-2 border-t border-gray-100'>
+                        <div className="pt-1 border-t border-gray-100">
                             {currentUser ? (
-                                <div className='flex flex-col gap-2'>
-                                    <Link to="/dashboard?tab=profile" className='w-full'>
-                                        <Button className='w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all'>
-                                            👤 Mi Perfil
-                                        </Button>
+                                <div className="flex flex-col gap-0">
+                                    {/* Info del usuario */}
+                                    <div className="flex items-center gap-3 py-3 border-b border-gray-50">
+                                        <img
+                                            src={currentUser.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}
+                                            alt="Foto de perfil"
+                                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                        />
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 truncate">{currentUser.username}</p>
+                                            <p className="text-xs text-gray-400 font-light truncate">{currentUser.email}</p>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        to="/dashboard?tab=profile"
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="py-3 text-sm font-semibold text-gray-700 hover:text-[#B076CE] transition-colors border-b border-gray-50"
+                                    >
+                                        Mi perfil
                                     </Link>
                                     {currentUser.isAdmin && (
-                                        <Link to="/dashboard?tab=dash" className='w-full'>
-                                            <Button className='w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all'>
-                                                📊 Dashboard
-                                            </Button>
+                                        <Link
+                                            to="/dashboard?tab=dash"
+                                            onClick={() => setIsMenuOpen(false)}
+                                            className="py-3 text-sm font-semibold text-gray-700 hover:text-[#B076CE] transition-colors border-b border-gray-50"
+                                        >
+                                            Dashboard
                                         </Link>
                                     )}
                                     <button
                                         onClick={handleSignout}
-                                        className='w-full px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded-lg transition-all'
+                                        className="py-3 text-sm font-semibold text-left text-red-500 hover:text-red-700 transition-colors"
                                     >
-                                        🚪 Salir
+                                        Cerrar sesión
                                     </button>
                                 </div>
                             ) : (
-                                <Link to="/sign-in" className='w-full'>
-                                    <Button className='w-full bg-[#B076CE] hover:bg-purple-700 text-white font-semibold rounded-lg transition-all'>
-                                        Ingresar
-                                    </Button>
+                                <Link
+                                    to="/sign-in"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center justify-center w-full py-3 border border-gray-900 text-gray-900 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#B076CE] hover:border-[#B076CE] hover:text-white transition-all duration-200"
+                                >
+                                    Ingresar
                                 </Link>
                             )}
                         </div>

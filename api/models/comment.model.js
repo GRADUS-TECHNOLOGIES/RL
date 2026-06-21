@@ -25,6 +25,9 @@ const commentSchema = new mongoose.Schema({
     { timestamps: true }
 );
 
+// Índice para cargar comentarios de un post ordenados por fecha
+commentSchema.index({ postId: 1, createdAt: -1 });
+
 const Comment = mongoose.model('Comment', commentSchema);
 
 export default Comment;

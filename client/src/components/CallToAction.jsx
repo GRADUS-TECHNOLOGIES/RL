@@ -1,35 +1,39 @@
-import { Button } from "flowbite-react";
-import { HiBell } from "react-icons/hi";
-
 export default function CallToAction() {
     return (
-        <div className="flex flex-col sm:flex-row p-4 border border-black justify-center items-center rounded-tl-3xl rounded-br-3xl text-center sm:text-left shadow-md hover:shadow-lg transition-shadow duration-300 bg-white">
-            {/* Texto e información */}
-            <div className="flex-1 flex flex-col justify-center p-4 sm:p-6">
-                <h2 className="text-3xl sm:text-4xl font-bold text-black leading-tight">
-                    Sé parte del cambio legislativo en México
-                </h2>
-                <p className="text-[#545454] my-4">
-                    Suscríbete a nuestra revista y nunca pierdas de vista aquellas acciones que cambian a nuestro país
-                </p>
-                {/* Botón full width en móvil */}
-                <Button
-                    href="/error"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto mt-2 sm:mt-0 bg-[#b076ce] hover:bg-black hover:text-[#b076ce] dark:bg-[#b076ce] dark:hover:bg-black rounded-tl-xl rounded-bl-none transition-all duration-300"
-                >
-                    <HiBell className="mr-2 h-5 w-5" />
-                    Suscribirse
-                </Button>
-            </div>
+        <div className="border border-gray-100">
+            <div className="flex flex-col sm:flex-row">
 
-            {/* Imagen */}
-            <div className="p-4 flex-1 flex justify-center">
-                <img
-                    src="https://portalciudadano2.diputados.gob.mx/assets/imagenes/header_6-p-800.png" 
-                    alt="Cámara de Diputados"
-                    className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-                />
+                {/* Texto */}
+                <div className="flex-1 p-8 sm:p-10 flex flex-col justify-center">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-[2px] h-4 bg-[#B076CE] flex-shrink-0" />
+                        <span className="text-[10px] font-black text-[#B076CE] uppercase tracking-[0.3em]">
+                            Boletín
+                        </span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight mb-3">
+                        Sé parte del cambio legislativo en México
+                    </h2>
+                    <p className="text-sm text-gray-500 font-light leading-relaxed mb-6">
+                        Suscríbete a nuestra revista y nunca pierdas de vista las acciones que transforman al país.
+                    </p>
+                    <a
+                        href="/error"
+                        className="inline-flex items-center gap-2 self-start px-5 py-2.5 border border-gray-900 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] hover:bg-[#B076CE] hover:border-[#B076CE] hover:text-white transition-all duration-300"
+                    >
+                        Suscribirse
+                    </a>
+                </div>
+
+                {/* Imagen */}
+                <div className="flex-1 overflow-hidden min-h-[200px] sm:min-h-[260px]">
+                    <img
+                        src="https://portalciudadano2.diputados.gob.mx/assets/imagenes/header_6-p-800.png"
+                        alt="Cámara de Diputados"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+
             </div>
         </div>
     );

@@ -1,11 +1,4 @@
 import {
-    Alert,
-    Button,
-    FileInput,
-    Select,
-    TextInput,
-} from 'flowbite-react';
-import {
     getDownloadURL,
     getStorage,
     ref,
@@ -13,8 +6,6 @@ import {
 } from 'firebase/storage';
 import { app } from '../firebase';
 import { useState, useEffect, useCallback } from 'react';
-import { CircularProgressbar } from 'react-circular-progressbar';
-import 'react-circular-progressbar/dist/styles.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 // Tiptap
@@ -33,43 +24,101 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 // Componentes
 import EditorToolbar from '../components/EditorToolbar';
+import { sanitizeHtml } from '../utils/sanitize';
 import { GlobalWorkerOptions } from 'pdfjs-dist';
 
-// Configura el worker de pdfjs (versión fija)
 GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
+// ── Constantes ─────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+    { value: 'uncategorized', label: 'Sin categoría'           },
+    { value: 'actualidad',    label: 'Actualidad urgente'      },
+    { value: 'analisis',      label: 'Análisis legislativo'    },
+    { value: 'derecho',       label: 'Derecho y constitución'  },
+    { value: 'electoral',     label: 'Electoral'               },
+    { value: 'entrevista',    label: 'Entrevista'              },
+    { value: 'internacional', label: 'Política internacional'  },
+    { value: 'investigacion', label: 'Investigación y datos'   },
+    { value: 'opinion',       label: 'Opinión y debate'        },
+    { value: 'politica',      label: 'Poder y política'        },
+];
+
+// ── Primitivos ─────────────────────────────────────────────────────────────
+
+const SectionLabel = ({ label }) => (
+    <div className="flex items-center gap-3 mb-4">
+        <div className="w-[2px] h-4 bg-[#B076CE] flex-shrink-0" />
+        <span className="text-[10px] font-black text-[#B076CE] uppercase tracking-[0.3em]">{label}</span>
+        <div className="flex-1 h-px bg-gray-100" />
+    </div>
+);
+
+const Chevron = () => (
+    <svg className="w-3 h-3 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+);
+
+const PanelHeader = ({ label, purple = false }) => (
+    <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 bg-gray-50/50 flex-shrink-0">
+        <div className={`w-[2px] h-4 flex-shrink-0 ${purple ? 'bg-[#B076CE]' : 'bg-gray-300'}`} />
+        <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${purple ? 'text-[#B076CE]' : 'text-gray-400'}`}>
+            {label}
+        </span>
+    </div>
+);
+
+const UploadProgress = ({ progress }) => (
+    <div className="mt-2 h-[2px] bg-gray-100">
+        <div
+            className="h-[2px] bg-[#B076CE] transition-all duration-300"
+            style={{ width: `${progress}%` }}
+        />
+    </div>
+);
+
+const Spinner = () => (
+    <svg className="animate-spin w-6 h-6 text-[#B076CE]" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+);
+
+// ── UpdatePost ─────────────────────────────────────────────────────────────
+
 export default function UpdatePost() {
-    const { postId } = useParams();
+    const { postId }      = useParams();
     const { currentUser } = useSelector((state) => state.user);
-    const [file, setFile] = useState(null);
-    const [pdfFile, setPdfFile] = useState(null);
+    const navigate        = useNavigate();
+
+    const [file, setFile]                           = useState(null);
+    const [pdfFile, setPdfFile]                     = useState(null);
     const [imageUploadProgress, setImageUploadProgress] = useState(null);
-    const [pdfUploadProgress, setPdfUploadProgress] = useState(null);
-    const [imageUploadError, setImageUploadError] = useState(null);
-    const [pdfUploadError, setPdfUploadError] = useState(null);
-    const [formData, setFormData] = useState({
-        title: '',
-        category: 'uncategorized',
-        content: '',
-        image: '',
-        pdf: '',
-        isMagazine: false,
+    const [pdfUploadProgress, setPdfUploadProgress]     = useState(null);
+    const [imageUploadError, setImageUploadError]       = useState(null);
+    const [pdfUploadError, setPdfUploadError]           = useState(null);
+    const [formData, setFormData]                   = useState({
+        title: '', category: 'uncategorized', content: '', image: '', pdf: '', isMagazine: false,
     });
     const [isMagazineMode, setIsMagazineMode] = useState(false);
-    const [publishError, setPublishError] = useState(null);
+    const [publishError, setPublishError]     = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+    const [loading, setLoading]               = useState(false);
+
+    const setMode = (isMag) => {
+        setIsMagazineMode(isMag);
+        setFormData((prev) => ({ ...prev, isMagazine: isMag }));
+    };
 
     const handleContentUpdate = useCallback(({ editor }) => {
-        const content = editor.getHTML();
-        setFormData((prev) => ({ ...prev, content }));
+        setFormData((prev) => ({ ...prev, content: editor.getHTML() }));
     }, []);
 
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
-                bulletList: { HTMLAttributes: { class: 'list-disc list-inside' } },
+                bulletList:  { HTMLAttributes: { class: 'list-disc list-inside' } },
                 orderedList: { HTMLAttributes: { class: 'list-decimal list-inside' } },
             }),
             Underline,
@@ -78,52 +127,42 @@ export default function UpdatePost() {
             Link.configure({ openOnClick: false }),
             Emoji.configure({ allowInline: true }),
             Table.configure({ resizable: true }),
-            TableRow,
-            TableCell,
-            TableHeader,
+            TableRow, TableCell, TableHeader,
             Placeholder.configure({ placeholder: 'Comienza a escribir tu contenido aquí...' }),
-            TextAlign.configure({
-                types: ['heading', 'paragraph'],
-            }),
+            TextAlign.configure({ types: ['heading', 'paragraph'] }),
         ],
-        content: formData.content,
-        editable: true,
-        onUpdate: handleContentUpdate,
+        content:   formData.content,
+        editable:  true,
+        onUpdate:  handleContentUpdate,
         autofocus: 'end',
     });
 
+    // ── Fetch post ────────────────────────────────────────────────────────
+
     useEffect(() => {
-        document.title = 'Actualizar publicación - Revista Legislatura';
+        document.title = 'Actualizar publicación – Revista Legislatura';
 
         const fetchPost = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/post/getposts?postId=${postId}`);
+                const res  = await fetch(`/api/post/getposts?postId=${postId}`);
                 const data = await res.json();
-
-                if (!res.ok || !data.posts || data.posts.length === 0) {
-                    setPublishError('Post no encontrado');
-                    return;
-                }
+                if (!res.ok || !data.posts?.length) { setPublishError('Publicación no encontrada'); return; }
 
                 const post = data.posts[0];
                 setFormData({
-                    title: post.title,
-                    category: post.category,
-                    content: post.content,
-                    image: post.image,
-                    pdf: post.pdf || '',
+                    title:     post.title,
+                    category:  post.category,
+                    content:   post.content,
+                    image:     post.image,
+                    pdf:       post.pdf || '',
                     isMagazine: !!post.pdf,
-                    _id: post._id,
+                    _id:       post._id,
                 });
                 setIsMagazineMode(!!post.pdf);
-
-                if (editor) {
-                    editor.commands.setContent(post.content);
-                }
-            } catch (error) {
-                console.error('Error fetching post:', error);
-                setPublishError('Error al cargar el post');
+                if (editor) editor.commands.setContent(post.content);
+            } catch {
+                setPublishError('Error al cargar la publicación');
             } finally {
                 setLoading(false);
             }
@@ -132,391 +171,369 @@ export default function UpdatePost() {
         fetchPost();
     }, [postId, editor]);
 
-    const handleUploadImage = async () => {
-        if (!file) {
-            setImageUploadError('Por favor seleccione una imagen');
-            return;
-        }
-        setImageUploadError(null);
-        setImageUploadProgress(0);
-        try {
-            const storage = getStorage(app);
-            const fileName = `${new Date().getTime()}-${file.name}`;
-            const storageRef = ref(storage, fileName);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-            uploadTask.on(
-                'state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setImageUploadProgress(progress.toFixed(0));
-                },
-                (error) => {
-                    console.error('Upload failed:', error);
-                    setImageUploadError('Error al cargar la imagen');
-                    setImageUploadProgress(null);
-                },
-                () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        setImageUploadProgress(null);
-                        setImageUploadError(null);
-                        setFormData((prev) => ({ ...prev, image: downloadURL }));
-                    });
-                }
-            );
-        } catch (error) {
-            console.error('Unexpected error:', error);
-            setImageUploadError('Ocurrió un error inesperado');
-            setImageUploadProgress(null);
-        }
+    // ── Upload helpers ────────────────────────────────────────────────────
+
+    const uploadFile = (fileObj, setProgress, setError, onSuccess) => {
+        if (!fileObj) { setError('Por favor selecciona un archivo'); return; }
+        setError(null);
+        setProgress(0);
+        const storage    = getStorage(app);
+        const storageRef = ref(storage, `${Date.now()}-${fileObj.name}`);
+        const task       = uploadBytesResumable(storageRef, fileObj);
+        task.on(
+            'state_changed',
+            (snap) => setProgress(((snap.bytesTransferred / snap.totalBytes) * 100).toFixed(0)),
+            (err)  => { console.error(err); setError('Error al cargar el archivo'); setProgress(null); },
+            ()     => getDownloadURL(task.snapshot.ref).then((url) => { setProgress(null); setError(null); onSuccess(url); }),
+        );
     };
 
-    const handleUploadPdf = async () => {
-        if (!pdfFile) {
-            setPdfUploadError('Por favor seleccione un archivo PDF');
-            return;
-        }
-        setPdfUploadError(null);
-        setPdfUploadProgress(0);
-        try {
-            const storage = getStorage(app);
-            const fileName = `${new Date().getTime()}-${pdfFile.name}`;
-            const storageRef = ref(storage, fileName);
-            const uploadTask = uploadBytesResumable(storageRef, pdfFile);
-            uploadTask.on(
-                'state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    setPdfUploadProgress(progress.toFixed(0));
-                },
-                (error) => {
-                    console.error('PDF Upload failed:', error);
-                    setPdfUploadError('Error al cargar el PDF');
-                    setPdfUploadProgress(null);
-                },
-                () => {
-                    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                        setPdfUploadProgress(null);
-                        setPdfUploadError(null);
-                        setFormData((prev) => ({ ...prev, pdf: downloadURL }));
-                    });
-                }
-            );
-        } catch (error) {
-            console.error('Unexpected error:', error);
-            setPdfUploadError('Ocurrió un error inesperado');
-            setPdfUploadProgress(null);
-        }
-    };
+    const handleUploadImage = () =>
+        uploadFile(file, setImageUploadProgress, setImageUploadError, (url) =>
+            setFormData((prev) => ({ ...prev, image: url }))
+        );
+
+    const handleUploadPdf = () =>
+        uploadFile(pdfFile, setPdfUploadProgress, setPdfUploadError, (url) =>
+            setFormData((prev) => ({ ...prev, pdf: url }))
+        );
+
+    // ── Submit ────────────────────────────────────────────────────────────
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setPublishError(null);
         setSuccessMessage(null);
 
+        if (!formData.title.trim()) { setPublishError('El título es obligatorio'); return; }
+        if (isMagazineMode && !formData.pdf)    { setPublishError('El PDF es obligatorio para una revista'); return; }
+        if (!isMagazineMode && !formData.image) { setPublishError('La imagen es obligatoria para un artículo'); return; }
+
         try {
-            // Validaciones básicas
-            if (!formData.title.trim()) {
-                setPublishError('El título es obligatorio');
-                document.getElementById('title')?.focus();
-                return;
-            }
-            if (isMagazineMode && !formData.pdf) {
-                setPublishError('El archivo PDF es obligatorio');
-                return;
-            }
-            if (!isMagazineMode && !formData.image) {
-                setPublishError('La imagen es obligatoria');
-                return;
-            }
-
-            // Realizar la solicitud al backend SIN enviar el token
             const res = await fetch(`/api/post/updatepost/${formData._id}/${currentUser._id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                method:  'PUT',
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify(formData),
+                body:    JSON.stringify(formData),
             });
-
             if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message || 'Hubo un problema al actualizar el post');
+                const err = await res.json();
+                throw new Error(err.message || 'Hubo un problema al actualizar');
             }
-
             const data = await res.json();
-            setSuccessMessage('¡Post actualizado con éxito!');
-            setTimeout(() => {
-                navigate(`/post/${data.slug}`);
-            }, 1500);
-        } catch (error) {
-            console.error('Error al actualizar:', error);
-            setPublishError('No se pudo actualizar el post');
+            setSuccessMessage('Publicación actualizada con éxito');
+            setTimeout(() => navigate(`/post/${data.slug}`), 1500);
+        } catch (err) {
+            console.error('Error al actualizar:', err);
+            setPublishError(err.message || 'No se pudo actualizar la publicación');
         }
     };
 
+    // ── Loading state ─────────────────────────────────────────────────────
+
     if (loading) {
         return (
-            <div className='flex justify-center items-center min-h-screen'>
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#b076ce]"></div>
+            <div className="flex flex-col items-center justify-center min-h-screen gap-3 bg-white">
+                <Spinner />
+                <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">Cargando</p>
             </div>
         );
     }
 
+    // ── JSX ───────────────────────────────────────────────────────────────
+
     return (
-        <div className='min-h-screen bg-white dark:bg-white p-4 md:p-8'>
-            <div className='max-w-7xl mx-auto'>
-                {/* Encabezado */}
-                <div className='mb-8'>
-                    <h1 className='text-4xl font-bold text-black dark:text-black mb-2'>Actualizar publicación</h1>
-                    <p className='text-gray-600 dark:text-gray-600'>Edita tu artículo o revista con vista previa en tiempo real</p>
+        <div className="min-h-screen bg-white p-4 md:p-8">
+            <div className="max-w-7xl mx-auto">
+
+                {/* ── Encabezado ── */}
+                <div className="mb-8 pb-6 border-b border-gray-100">
+                    <SectionLabel label="Dashboard" />
+                    <h1 className="text-3xl md:text-4xl font-black text-gray-900">Actualizar publicación</h1>
+                    <p className="text-sm text-gray-400 font-light mt-1">
+                        Edita el contenido o los archivos de esta publicación
+                    </p>
                 </div>
 
-                <form className='flex flex-col gap-6' onSubmit={handleSubmit}>
-                    {/* Título y categoría */}
-                    <div className='bg-white dark:bg-white rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-100'>
+                <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+
+                    {/* ── Información básica ── */}
+                    <div className="border border-gray-100 p-5">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+                            Información básica
+                        </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <TextInput
+                            <input
                                 type="text"
-                                placeholder="Título del post"
                                 id="title"
+                                placeholder="Título de la publicación"
                                 required
                                 value={formData.title}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, title: e.target.value })
-                                }
-                                className="md:col-span-2"
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="md:col-span-2 border border-gray-200 px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-300 placeholder:font-light outline-none focus:border-[#B076CE] transition-colors bg-white"
                             />
-                            <Select
-                                id="category"
-                                value={formData.category}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, category: e.target.value })
-                                }
-                            >
-                                <option value="uncategorized">Categoría</option>
-                                <option value="actualidad">Actualidad urgente</option>
-                                <option value="analisis">Análisis legislativo</option>
-                                <option value="derecho">Derecho y constitución</option>
-                                <option value="electoral">Electoral</option>
-                                <option value="entrevista">Entrevista</option>
-                                <option value="internacional">Política internacional</option>
-                                <option value="investigacion">Investigación y datos</option>
-                                <option value="opinion">Opinión y debate</option>
-                                <option value="politica">Poder y política</option>
-                            </Select>
+                            <div className="relative">
+                                <select
+                                    id="category"
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    className="w-full appearance-none border border-gray-200 px-4 py-2.5 pr-8 text-sm text-gray-700 outline-none focus:border-[#B076CE] transition-colors bg-white cursor-pointer"
+                                >
+                                    {CATEGORIES.map(({ value, label }) => (
+                                        <option key={value} value={value}>{label}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <Chevron />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Botón para alternar entre modos */}
-                    <div className='flex gap-4 justify-center'>
-                        <Button
-                            type="button"
-                            onClick={() => {
-                                setIsMagazineMode(!isMagazineMode);
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    isMagazine: !isMagazineMode,
-                                }));
-                            }}
-                            className={`px-8 py-3 font-semibold rounded-lg transition-all duration-300 ${
-                                !isMagazineMode
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                            }`}
-                        >
-                            📝 Artículo
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={() => {
-                                setIsMagazineMode(!isMagazineMode);
-                                setFormData((prev) => ({
-                                    ...prev,
-                                    isMagazine: !isMagazineMode,
-                                }));
-                            }}
-                            className={`px-8 py-3 font-semibold rounded-lg transition-all duration-300 ${
-                                isMagazineMode
-                                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-lg'
-                                    : 'bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'
-                            }`}
-                        >
-                            📚 Revista
-                        </Button>
+                    {/* ── Toggle de modo ── */}
+                    <div className="flex flex-col gap-3">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                            Tipo de publicación
+                        </p>
+                        <div className="flex w-fit border border-gray-200">
+                            <button
+                                type="button"
+                                onClick={() => setMode(false)}
+                                className={`px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-200 ${
+                                    !isMagazineMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-400 hover:text-gray-900'
+                                }`}
+                            >
+                                Artículo
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode(true)}
+                                className={`px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.2em] border-l border-gray-200 transition-all duration-200 ${
+                                    isMagazineMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-400 hover:text-gray-900'
+                                }`}
+                            >
+                                Revista
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-400 font-light">
+                            {isMagazineMode
+                                ? 'Modo revista: sube un nuevo PDF para reemplazar el actual.'
+                                : 'Modo artículo: edita el contenido y actualiza la imagen de portada si es necesario.'}
+                        </p>
                     </div>
 
-                    {/* Modo Artículo con Preview */}
+                    {/* ── Modo Artículo ── */}
                     {!isMagazineMode && (
-                        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[600px]'>
-                            {/* Editor (Izquierda) */}
-                            <div className='bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-100 flex flex-col'>
-                                <div className='bg-[#B076CE] p-4 border-b border-black'>
-                                    <h2 className='text-white font-semibold flex items-center gap-2'>
-                                        ✏️ Editor
-                                    </h2>
-                                </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[600px]">
 
-                                {/* Carga de imagen */}
-                                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                                    <div className="flex flex-col gap-3">
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-700">Selecciona una imagen</label>
-                                            <FileInput
+                            {/* Panel: Editor */}
+                            <div className="border border-gray-100 flex flex-col overflow-hidden">
+                                <PanelHeader label="Editor" purple />
+
+                                {/* Imagen de portada */}
+                                <div className="p-5 border-b border-gray-100 flex-shrink-0">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">
+                                        Imagen de portada
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1 border border-gray-200 hover:border-[#B076CE] transition-colors cursor-pointer overflow-hidden">
+                                            <input
                                                 type="file"
                                                 accept="image/*"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                 onChange={(e) => setFile(e.target.files?.[0] || null)}
-                                                className="w-full"
                                             />
+                                            <div className="px-3 py-2.5 flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <span className="text-xs text-gray-400 font-light truncate">
+                                                    {file ? file.name : 'Seleccionar imagen nueva...'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <Button
+                                        <button
                                             type="button"
                                             onClick={handleUploadImage}
                                             disabled={!!imageUploadProgress}
-                                            className="w-full bg-black hover:bg-[#B076CE] text-white font-semibold py-2 rounded-lg transition-all"
+                                            className="px-4 py-2 border border-gray-900 text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] hover:bg-[#B076CE] hover:border-[#B076CE] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap"
                                         >
-                                            {imageUploadProgress ? (
-                                                <div className="flex items-center gap-2 justify-center">
-                                                    <span>Cargando {imageUploadProgress}%</span>
-                                                </div>
-                                            ) : (
-                                                '⬆️ Actualizar imagen'
-                                            )}
-                                        </Button>
+                                            {imageUploadProgress ? `${imageUploadProgress}%` : 'Actualizar'}
+                                        </button>
                                     </div>
+                                    {imageUploadProgress && <UploadProgress progress={imageUploadProgress} />}
+                                    {formData.image && !imageUploadProgress && (
+                                        <p className="mt-2 text-[9px] font-black text-green-500 uppercase tracking-[0.2em]">Imagen cargada</p>
+                                    )}
+                                    {imageUploadError && (
+                                        <p className="mt-2 text-[9px] font-black text-red-500 uppercase tracking-[0.2em]">{imageUploadError}</p>
+                                    )}
                                 </div>
 
                                 {/* Editor TipTap */}
-                                <div className="flex-1 overflow-hidden p-4 flex flex-col gap-3">
+                                <div className="flex-1 overflow-hidden flex flex-col gap-3 p-4">
                                     <div className="flex-shrink-0">
                                         <EditorToolbar editor={editor} />
                                     </div>
-                                    <div className="flex-1 overflow-y-auto border border-gray-300 dark:border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-50">
-                                        <EditorContent
-                                            editor={editor}
-                                            className="ProseMirror h-full"
-                                        />
+                                    <div className="flex-1 overflow-y-auto border border-gray-200 focus-within:border-[#B076CE] transition-colors bg-white min-h-[200px]">
+                                        <EditorContent editor={editor} className="ProseMirror h-full" />
                                     </div>
                                 </div>
-
-                                {imageUploadError && <Alert color='failure' className='m-4'>{imageUploadError}</Alert>}
                             </div>
 
-                            {/* Preview (Derecha) */}
-                            <div className='bg-white dark:bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-100 flex flex-col'>
-                                <div className='bg-black p-4 border-b border-[#B076CE]'>
-                                    <h2 className='text-white font-semibold flex items-center gap-2'>
-                                        👁️ Vista previa
-                                    </h2>
-                                </div>
+                            {/* Panel: Vista previa */}
+                            <div className="border border-gray-100 flex flex-col overflow-hidden">
+                                <PanelHeader label="Vista previa" />
 
                                 <div className="flex-1 overflow-auto p-6">
-                                    {/* Imagen */}
-                                    {formData.image && (
-                                        <div className="mb-6 rounded-lg overflow-hidden shadow-md border border-gray-200 dark:border-gray-200">
-                                            <img
-                                                src={formData.image}
-                                                alt="Vista previa"
-                                                className="w-full h-64 object-cover"
-                                            />
+                                    {formData.category !== 'uncategorized' && (
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-[2px] h-4 bg-[#B076CE]" />
+                                            <span className="text-[10px] font-black text-[#B076CE] uppercase tracking-[0.3em]">
+                                                {formData.category}
+                                            </span>
                                         </div>
                                     )}
 
-                                    {/* Título */}
-                                    <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-900 mb-3'>
-                                        {formData.title || 'Título del post'}
+                                    <h1 className="text-2xl font-black text-gray-900 leading-tight mb-3">
+                                        {formData.title || <span className="text-gray-300">Título de la publicación</span>}
                                     </h1>
 
-                                    {/* Categoría y metadata */}
-                                    <div className='flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-200'>
-                                        <span className='px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 text-xs font-semibold rounded-full capitalize'>
-                                            {formData.category === 'uncategorized' ? 'Sin categoría' : formData.category}
-                                        </span>
-                                        <span className='text-sm text-gray-500 dark:text-gray-400'>
-                                            {new Date().toLocaleDateString('es-ES')}
-                                        </span>
-                                    </div>
+                                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mb-5 pb-4 border-b border-gray-100">
+                                        {new Date().toLocaleDateString('es-MX', {
+                                            year: 'numeric', month: 'long', day: 'numeric',
+                                        })}
+                                    </p>
 
-                                    {/* Contenido renderizado */}
-                                    <div className='preview-content text-gray-700 dark:text-gray-700 leading-relaxed'>
-                                        <div
-                                            dangerouslySetInnerHTML={{ __html: formData.content || '<p className="text-gray-500">El contenido aparecerá aquí...</p>' }}
+                                    {formData.image && (
+                                        <img
+                                            src={formData.image}
+                                            alt="Vista previa"
+                                            className="w-full h-48 object-cover mb-5"
                                         />
-                                    </div>
+                                    )}
+
+                                    <div
+                                        className="prose prose-sm max-w-none post-content"
+                                        dangerouslySetInnerHTML={{
+                                            __html: sanitizeHtml(formData.content) ||
+                                                '<p style="color:#d1d5db;font-size:0.875rem;font-weight:300">El contenido aparecerá aquí mientras editas...</p>',
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Modo Revista */}
+                    {/* ── Modo Revista ── */}
                     {isMagazineMode && (
-                        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-                            {/* Carga de PDF (Izquierda) */}
-                            <div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700'>
-                                <h2 className='text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2'>
-                                    📚 Actualizar revista
-                                </h2>
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex flex-col gap-1">
-                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Selecciona un archivo PDF</label>
-                                        <FileInput
-                                            type="file"
-                                            accept="application/pdf"
-                                            onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                                            className="w-full"
-                                        />
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        onClick={handleUploadPdf}
-                                        disabled={!!pdfUploadProgress}
-                                        className="w-full bg-rose-600 hover:bg-rose-700 text-white font-semibold py-3 rounded-lg transition-all"
-                                    >
-                                        {pdfUploadProgress ? (
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <span>Cargando {pdfUploadProgress}%</span>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                            {/* Panel: Upload PDF */}
+                            <div className="border border-gray-100 flex flex-col overflow-hidden">
+                                <PanelHeader label="Actualizar PDF" purple />
+
+                                <div className="p-6 flex flex-col gap-4">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                        Nuevo archivo PDF de la revista
+                                    </p>
+
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1 border border-gray-200 hover:border-[#B076CE] transition-colors cursor-pointer overflow-hidden">
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                                            />
+                                            <div className="px-3 py-2.5 flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                </svg>
+                                                <span className="text-xs text-gray-400 font-light truncate">
+                                                    {pdfFile ? pdfFile.name : 'Seleccionar nuevo PDF...'}
+                                                </span>
                                             </div>
-                                        ) : (
-                                            '⬆️ Actualizar PDF'
-                                        )}
-                                    </Button>
-                                    {pdfUploadError && <Alert color='failure'>{pdfUploadError}</Alert>}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleUploadPdf}
+                                            disabled={!!pdfUploadProgress}
+                                            className="px-4 py-2 border border-gray-900 text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] hover:bg-[#B076CE] hover:border-[#B076CE] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                                        >
+                                            {pdfUploadProgress ? `${pdfUploadProgress}%` : 'Actualizar'}
+                                        </button>
+                                    </div>
+
+                                    {pdfUploadProgress && <UploadProgress progress={pdfUploadProgress} />}
+                                    {formData.pdf && !pdfUploadProgress && (
+                                        <p className="text-[9px] font-black text-green-500 uppercase tracking-[0.2em]">PDF cargado correctamente</p>
+                                    )}
+                                    {pdfUploadError && (
+                                        <p className="text-[9px] font-black text-red-500 uppercase tracking-[0.2em]">{pdfUploadError}</p>
+                                    )}
+
+                                    <div className="border border-gray-100 p-4 mt-2">
+                                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mb-2">Notas</p>
+                                        <ul className="text-xs text-gray-400 font-light space-y-1 leading-relaxed list-none">
+                                            <li>Sube un nuevo PDF para reemplazar el actual.</li>
+                                            <li>Si no seleccionas un nuevo PDF, se conservará el existente.</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Preview del PDF (Derecha) */}
-                            {formData.pdf && (
-                                <div className='bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700'>
-                                    <div className='bg-gradient-to-r from-blue-600 to-blue-700 p-4 border-b border-blue-800'>
-                                        <h2 className='text-white font-semibold'>👁️ Vista previa PDF</h2>
-                                    </div>
-                                    <div className="p-4" style={{ height: '600px' }}>
+                            {/* Panel: Vista previa PDF */}
+                            <div className="border border-gray-100 flex flex-col overflow-hidden">
+                                <PanelHeader label="Vista previa" />
+                                {formData.pdf ? (
+                                    <div className="p-4 flex-1" style={{ minHeight: '600px' }}>
                                         <embed
                                             src={formData.pdf}
                                             type="application/pdf"
                                             width="100%"
                                             height="100%"
-                                            className="rounded-lg"
+                                            style={{ minHeight: '568px' }}
                                         />
                                     </div>
+                                ) : (
+                                    <div className="flex-1 flex flex-col items-center justify-center py-16 text-center">
+                                        <div className="w-[2px] h-8 bg-gray-100 mb-4" />
+                                        <p className="text-sm text-gray-300 font-light">
+                                            Carga un PDF para ver la vista previa
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Mensajes ── */}
+                    {(publishError || successMessage) && (
+                        <div className="space-y-3">
+                            {publishError && (
+                                <div className="flex items-center gap-3 px-4 py-3 border border-red-100 bg-red-50">
+                                    <div className="w-[2px] h-4 bg-red-400 flex-shrink-0" />
+                                    <p className="text-xs text-red-500 font-light">{publishError}</p>
+                                </div>
+                            )}
+                            {successMessage && (
+                                <div className="flex items-center gap-3 px-4 py-3 border border-green-200 bg-green-50">
+                                    <div className="w-[2px] h-4 bg-green-500 flex-shrink-0" />
+                                    <p className="text-xs text-green-600 font-light">{successMessage}</p>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* Mensajes de error y éxito */}
-                    <div className='space-y-3'>
-                        {publishError && <Alert color='failure'>{publishError}</Alert>}
-                        {successMessage && <Alert color='success'>{successMessage}</Alert>}
-                    </div>
-
-                    {/* Botón de actualizar */}
-                    <Button
-                        type='submit'
-                        className="w-full bg-[#B076CE] hover:bg-black text-white font-bold py-4 rounded-lg transition-all shadow-lg"
+                    {/* ── Actualizar ── */}
+                    <button
+                        type="submit"
+                        className="w-full py-3.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#B076CE] transition-colors duration-300"
                     >
-                        ✨ ACTUALIZAR PUBLICACIÓN
-                    </Button>
+                        Actualizar publicación
+                    </button>
                 </form>
             </div>
         </div>

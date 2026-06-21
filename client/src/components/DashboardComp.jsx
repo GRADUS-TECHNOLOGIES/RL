@@ -3,295 +3,322 @@ import { useSelector } from 'react-redux';
 import {
     HiAnnotation,
     HiArrowNarrowUp,
+    HiArrowNarrowDown,
     HiDocumentText,
     HiOutlineUserGroup,
-    HiBookOpen
+    HiBookOpen,
 } from 'react-icons/hi';
-import { Button, Table, TableHead, TableHeadCell, TableBody, TableRow, TableCell } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 
+// ── Primitivo de sección ───────────────────────────────────────────────────
+
+const SectionLabel = ({ label }) => (
+    <div className="flex items-center gap-3">
+        <div className="w-[2px] h-4 bg-[#B076CE] flex-shrink-0" />
+        <span className="text-[10px] font-black text-[#B076CE] uppercase tracking-[0.3em]">{label}</span>
+        <div className="flex-1 h-px bg-gray-100" />
+    </div>
+);
+
+// ── Tarjeta de estadística ─────────────────────────────────────────────────
+
+function StatCard({ label, value, delta, Icon }) {
+    const up = (delta ?? 0) >= 0;
+    return (
+        <div className="border border-gray-100 p-5 group hover:border-[#B076CE]/30 transition-colors duration-300">
+            <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="w-[2px] h-4 bg-[#B076CE]" />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                        {label}
+                    </span>
+                </div>
+                <Icon className="w-4 h-4 text-gray-200 group-hover:text-[#B076CE]/40 transition-colors" />
+            </div>
+
+            <p className="text-4xl font-black text-gray-900 leading-none mb-3 group-hover:text-[#B076CE] transition-colors duration-300 tabular-nums">
+                {(value ?? 0).toLocaleString('es-MX')}
+            </p>
+
+            <div className="flex items-center gap-1.5">
+                {up
+                    ? <HiArrowNarrowUp   className="w-3 h-3 text-green-500 flex-shrink-0" />
+                    : <HiArrowNarrowDown className="w-3 h-3 text-red-400 flex-shrink-0" />
+                }
+                <span className={`text-[10px] font-black tabular-nums ${up ? 'text-green-500' : 'text-red-400'}`}>
+                    {Math.abs(delta ?? 0)}
+                </span>
+                <span className="text-[10px] text-gray-300 font-light">vs. mes anterior</span>
+            </div>
+        </div>
+    );
+}
+
+// ── Cabecera de tabla ──────────────────────────────────────────────────────
+
+function TableHeader({ label, linkTo, linkLabel = 'Ver todos →' }) {
+    return (
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <SectionLabel label={label} />
+            <Link
+                to={linkTo}
+                className="ml-4 text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] hover:text-[#B076CE] transition-colors flex-shrink-0"
+            >
+                {linkLabel}
+            </Link>
+        </div>
+    );
+}
+
+// ── Estado vacío ───────────────────────────────────────────────────────────
+
+function EmptyRow({ cols, message }) {
+    return (
+        <tr>
+            <td colSpan={cols} className="px-5 py-8 text-center text-xs text-gray-300 font-light">
+                {message}
+            </td>
+        </tr>
+    );
+}
+
+// ── Componente principal ───────────────────────────────────────────────────
+
 export default function DashboardComp() {
-    const [users, setUsers] = useState([]);
+    const [users,    setUsers]    = useState([]);
     const [comments, setComments] = useState([]);
-    const [posts, setPosts] = useState([]);
-    const [totals, setTotals] = useState({
-        users: 0,
-        posts: 0,
-        comments: 0,
-        magazines: 0
-    });
-    const [lastMonth, setLastMonth] = useState({
-        users: 0,
-        posts: 0,
-        comments: 0,
-        magazines: 0
-    });
-    const { currentUser } = useSelector((state) => state.user);
+    const [posts,    setPosts]    = useState([]);
+    const [totals,   setTotals]   = useState({ users: 0, posts: 0, comments: 0, magazines: 0 });
+    const [lastMonth, setLastMonth] = useState({ users: 0, posts: 0, comments: 0, magazines: 0 });
+
+    const { currentUser } = useSelector((s) => s.user);
 
     useEffect(() => {
+        if (!currentUser.isAdmin) return;
+
         const fetchData = async () => {
-            if (!currentUser.isAdmin) return;
-
             try {
-                // Fetch users
-                const usersRes = await fetch('/api/user/getusers?limit=5');
-                const usersData = await usersRes.json();
+                const [usersRes, postsRes, commentsRes] = await Promise.all([
+                    fetch('/api/user/getusers?limit=5'),
+                    fetch('/api/post/getposts?limit=5'),
+                    fetch('/api/comment/getcomments?limit=5'),
+                ]);
+
                 if (usersRes.ok) {
-                    setUsers(usersData.users);
-                    setTotals(prev => ({...prev, users: usersData.totalUsers}));
-                    setLastMonth(prev => ({...prev, users: usersData.lastMonthUsers}));
+                    const d = await usersRes.json();
+                    setUsers(d.users ?? []);
+                    setTotals(p => ({ ...p, users: d.totalUsers ?? 0 }));
+                    setLastMonth(p => ({ ...p, users: d.lastMonthUsers ?? 0 }));
                 }
 
-                // Fetch posts
-                const postsRes = await fetch('/api/post/getposts?limit=5');
-                const postsData = await postsRes.json();
                 if (postsRes.ok) {
-                    setPosts(postsData.posts);
-                    const magazines = postsData.posts.filter(post => post.pdf);
-                    
-                    setTotals(prev => ({
-                        ...prev, 
-                        posts: postsData.totalPosts,
-                        magazines: magazines.length
-                    }));
-                    
-                    setLastMonth(prev => ({
-                        ...prev,
-                        posts: postsData.lastMonthPosts,
-                        magazines: Math.floor(magazines.length * 0.7) // Temporal - debería venir del backend
+                    const d = await postsRes.json();
+                    const magazines = (d.posts ?? []).filter((p) => p.pdf);
+                    setPosts(d.posts ?? []);
+                    setTotals(p => ({ ...p, posts: d.totalPosts ?? 0, magazines: magazines.length }));
+                    setLastMonth(p => ({
+                        ...p,
+                        posts:     d.lastMonthPosts ?? 0,
+                        magazines: Math.floor(magazines.length * 0.7),
                     }));
                 }
 
-                // Fetch comments
-                const commentsRes = await fetch('/api/comment/getcomments?limit=5');
-                const commentsData = await commentsRes.json();
                 if (commentsRes.ok) {
-                    setComments(commentsData.comments);
-                    setTotals(prev => ({...prev, comments: commentsData.totalComments}));
-                    setLastMonth(prev => ({...prev, comments: commentsData.lastMonthComments}));
+                    const d = await commentsRes.json();
+                    setComments(d.comments ?? []);
+                    setTotals(p => ({ ...p, comments: d.totalComments ?? 0 }));
+                    setLastMonth(p => ({ ...p, comments: d.lastMonthComments ?? 0 }));
                 }
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+            } catch (err) {
+                console.error('Error al cargar datos del tablero:', err);
             }
         };
 
         fetchData();
     }, [currentUser]);
 
-    // Componente reutilizable para las tarjetas de estadísticas
-    const StatCard = ({ title, value, lastMonthValue, icon: Icon, color = 'bg-purple-600' }) => (
-        <div className="bg-white dark:bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 dark:border-gray-700 group">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex-1">
-                    <h3 className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 font-semibold mb-2">{title}</h3>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
-                </div>
-                <div className={`${color} text-white rounded-lg p-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="text-2xl" />
-                </div>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-                <span className={`${lastMonthValue >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} flex items-center font-semibold`}>
-                    <HiArrowNarrowUp className="mr-1" /> {Math.abs(lastMonthValue)}
-                </span>
-                <span className="text-gray-500 dark:text-gray-400">vs mes anterior</span>
-            </div>
-        </div>
-    );
-
     return (
-        <div className='p-4 md:p-8 w-full bg-white dark:bg-white min-h-screen'>
-            {/* Encabezado */}
-            <div className='mb-8'>
-                <h1 className='text-3xl font-bold text-gray-900 dark:text-white mb-2'>Dashboard</h1>
-                <p className='text-gray-600 dark:text-gray-400'>Resumen de la actividad y estadísticas principales</p>
+        <div className="p-6 md:p-8 w-full bg-white min-h-screen">
+
+            {/* ── Encabezado ── */}
+            <div className="mb-8 pb-6 border-b border-gray-100">
+                <SectionLabel label="Dashboard" />
+                <h1 className="text-3xl md:text-4xl font-black text-gray-900 mt-4">Tablero</h1>
+                <p className="text-sm text-gray-400 font-light mt-1">
+                    Resumen de actividad y estadísticas principales
+                </p>
             </div>
 
-            {/* Sección de Estadísticas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard 
-                    title="Usuarios totales" 
-                    value={totals.users} 
-                    lastMonthValue={lastMonth.users} 
-                    icon={HiOutlineUserGroup}
-                    color="bg-[#B076CE]"
-                />
-                <StatCard 
-                    title="Comentarios totales" 
-                    value={totals.comments} 
-                    lastMonthValue={lastMonth.comments} 
-                    icon={HiAnnotation}
-                    color="bg-[#B076CE]"
-                />
-                <StatCard 
-                    title="Publicaciones totales" 
-                    value={totals.posts} 
-                    lastMonthValue={lastMonth.posts} 
-                    icon={HiDocumentText}
-                    color="bg-[#B076CE]"
-                />
-                <StatCard 
-                    title="Revistas totales" 
-                    value={totals.magazines} 
-                    lastMonthValue={lastMonth.magazines} 
-                    icon={HiBookOpen}
-                    color="bg-[#B076CE]"
-                />
+            {/* ── Estadísticas ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+                <StatCard label="Usuarios"      value={totals.users}     delta={lastMonth.users}     Icon={HiOutlineUserGroup} />
+                <StatCard label="Comentarios"   value={totals.comments}  delta={lastMonth.comments}  Icon={HiAnnotation}       />
+                <StatCard label="Publicaciones" value={totals.posts}     delta={lastMonth.posts}     Icon={HiDocumentText}     />
+                <StatCard label="Revistas"      value={totals.magazines} delta={lastMonth.magazines} Icon={HiBookOpen}         />
             </div>
 
-            {/* Sección de Tablas */}
+            {/* ── Tablas ── */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Tabla de Usuarios Recientes */}
-                <div className='rounded-xl shadow-lg overflow-hidden bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300'>
-                    <div className='flex justify-between items-center p-6 border-b dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750'>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Usuarios recientes</h2>
-                        <Button size="xs" className='bg-[#B076CE] hover:bg-black text-white border-0 rounded-lg transition-all'>
-                            <Link to={'/dashboard?tab=users'}>Ver todos</Link>
-                        </Button>
-                    </div>
+
+                {/* Usuarios recientes */}
+                <div className="border border-gray-100 overflow-hidden">
+                    <TableHeader label="Usuarios recientes" linkTo="/dashboard?tab=users" />
                     <div className="overflow-x-auto">
-                        <Table hoverable className="w-full">
-                            <TableHead>
-                                <TableRow className="bg-gray-100 dark:bg-gray-700">
-                                    <TableHeadCell className="w-12 py-3">Avatar</TableHeadCell>
-                                    <TableHeadCell className="py-3 font-semibold">Usuario</TableHeadCell>
-                                    <TableHeadCell className="py-3 font-semibold">Email</TableHeadCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody className="divide-y">
-                                {users.length > 0 ? (
-                                    users.map((user) => (
-                                        <TableRow key={user._id} className="bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                            <TableCell>
-                                                <img
-                                                    src={user.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'} 
-                                                    alt="user"
-                                                    className="w-10 h-10 rounded-full object-cover bg-gray-200 border border-gray-300 dark:border-gray-600"
-                                                />
-                                            </TableCell>
-                                            <TableCell className="font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                                                {user.username || 'Anónimo'}
-                                            </TableCell>
-                                            <TableCell className="text-gray-600 dark:text-gray-400 text-sm">
-                                                {user.email || 'Sin correo'}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan="3" className="text-center py-8 text-gray-500">
-                                            No hay usuarios recientes
-                                        </TableCell>
-                                    </TableRow>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-gray-100 bg-gray-50/80">
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-5 py-2.5 w-14">
+                                        Avatar
+                                    </th>
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-4 py-2.5">
+                                        Usuario
+                                    </th>
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-4 py-2.5">
+                                        Correo
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.length > 0 ? users.map((user) => (
+                                    <tr
+                                        key={user._id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors"
+                                    >
+                                        <td className="px-5 py-3">
+                                            <img
+                                                src={user.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}
+                                                alt={user.username}
+                                                className="w-8 h-8 rounded-full object-cover border border-gray-100"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-semibold text-gray-800 whitespace-nowrap">
+                                            {user.username || 'Anónimo'}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-gray-400 font-light max-w-[160px] truncate">
+                                            {user.email || '—'}
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <EmptyRow cols={3} message="No hay usuarios recientes" />
                                 )}
-                            </TableBody>
-                        </Table>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {/* Tabla de Comentarios Recientes */}
-                <div className='rounded-xl shadow-lg overflow-hidden bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300'>
-                    <div className='flex justify-between items-center p-6 border-b dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750'>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Comentarios recientes</h2>
-                        <Button size="xs" className='bg-[#B076CE] hover:bg-black text-white border-0 rounded-lg transition-all'>
-                            <Link to={'/dashboard?tab=comments'}>Ver todos</Link>
-                        </Button>
-                    </div>
+                {/* Comentarios recientes */}
+                <div className="border border-gray-100 overflow-hidden">
+                    <TableHeader label="Comentarios recientes" linkTo="/dashboard?tab=comments" />
                     <div className="overflow-x-auto">
-                        <Table hoverable className="w-full">
-                            <TableHead>
-                                <TableRow className="bg-gray-100 dark:bg-gray-700">
-                                    <TableHeadCell className="py-3 font-semibold">Contenido</TableHeadCell>
-                                    <TableHeadCell className="w-20 py-3 font-semibold text-center">Likes</TableHeadCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody className="divide-y">
-                                {comments.length > 0 ? (
-                                    comments.map((comment) => (
-                                        <TableRow key={comment._id} className="bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                            <TableCell className="max-w-xs line-clamp-2 text-gray-600 dark:text-gray-300 text-sm py-3">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-gray-100 bg-gray-50/80">
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-5 py-2.5">
+                                        Contenido
+                                    </th>
+                                    <th className="text-right text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-5 py-2.5 w-16">
+                                        Likes
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {comments.length > 0 ? comments.map((comment) => (
+                                    <tr
+                                        key={comment._id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors"
+                                    >
+                                        <td className="px-5 py-3 text-xs text-gray-600 font-light max-w-xs">
+                                            <p className="line-clamp-2 leading-relaxed">
                                                 {comment.content || 'Sin contenido'}
-                                            </TableCell>
-                                            <TableCell className="text-center font-semibold text-gray-900 dark:text-white py-3">{comment.numberOfLikes || 0}</TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan="2" className="text-center py-8 text-gray-500">
-                                            No hay comentarios recientes
-                                        </TableCell>
-                                    </TableRow>
+                                            </p>
+                                        </td>
+                                        <td className="px-5 py-3 text-right text-xs font-black text-gray-700 tabular-nums">
+                                            {comment.numberOfLikes || 0}
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <EmptyRow cols={2} message="No hay comentarios recientes" />
                                 )}
-                            </TableBody>
-                        </Table>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {/* Tabla de Publicaciones Recientes */}
-                <div className='rounded-xl shadow-lg overflow-hidden bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:shadow-xl transition-shadow duration-300 lg:col-span-2'>
-                    <div className='flex justify-between items-center p-6 border-b dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-750'>
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Publicaciones recientes</h2>
-                        <Button size="xs" className='bg-[#B076CE] hover:bg-black text-white border-0 rounded-lg transition-all'>
-                            <Link to={'/dashboard?tab=posts'}>Ver todas</Link>
-                        </Button>
-                    </div>
+                {/* Publicaciones recientes — ancho completo */}
+                <div className="border border-gray-100 overflow-hidden lg:col-span-2">
+                    <TableHeader label="Publicaciones recientes" linkTo="/dashboard?tab=posts" linkLabel="Ver todas →" />
                     <div className="overflow-x-auto">
-                        <Table hoverable className="w-full">
-                            <TableHead>
-                                <TableRow className="bg-gray-100 dark:bg-gray-700">
-                                    <TableHeadCell className="w-20 py-3 font-semibold">Media</TableHeadCell>
-                                    <TableHeadCell className="py-3 font-semibold">Título</TableHeadCell>
-                                    <TableHeadCell className="w-40 py-3 font-semibold">Categoría</TableHeadCell>
-                                    <TableHeadCell className="w-24 py-3 font-semibold">Tipo</TableHeadCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody className="divide-y">
-                                {posts.length > 0 ? (
-                                    posts.map((post) => (
-                                        <TableRow key={post._id} className="bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                            <TableCell>
-                                                {post.pdf ? (
-                                                    <div className="flex items-center justify-center bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900 dark:to-red-800 w-14 h-10 rounded-lg border border-red-200 dark:border-red-700">
-                                                        <span className="text-xs font-bold text-red-600 dark:text-red-300">PDF</span>
-                                                    </div>
-                                                ) : (
-                                                    <img
-                                                        src={post.image || 'https://via.placeholder.com/100x80'} 
-                                                        alt="Post"
-                                                        className="w-14 h-10 rounded-lg object-cover bg-gray-200 border border-gray-300 dark:border-gray-600"
-                                                    />
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="font-medium text-gray-900 dark:text-white max-w-xs truncate py-3">
-                                                {post.title || 'Sin título'}
-                                            </TableCell>
-                                            <TableCell className="text-gray-600 dark:text-gray-400 capitalize py-3">
-                                                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs font-medium">
-                                                    {post.category || 'Sin categoría'}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="py-3">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                    post.pdf 
-                                                        ? 'bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-200' 
-                                                        : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                                                }`}>
-                                                    {post.pdf ? 'Revista' : 'Artículo'}
-                                                </span>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan="4" className="text-center py-8 text-gray-500">
-                                            No hay publicaciones recientes
-                                        </TableCell>
-                                    </TableRow>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-gray-100 bg-gray-50/80">
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-5 py-2.5 w-20">
+                                        Media
+                                    </th>
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-4 py-2.5">
+                                        Título
+                                    </th>
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-4 py-2.5 w-40">
+                                        Categoría
+                                    </th>
+                                    <th className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-4 py-2.5 w-24">
+                                        Tipo
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {posts.length > 0 ? posts.map((post) => (
+                                    <tr
+                                        key={post._id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-gray-50/60 transition-colors"
+                                    >
+                                        {/* Miniatura */}
+                                        <td className="px-5 py-3">
+                                            {post.pdf ? (
+                                                <div className="w-14 h-10 border border-red-100 flex items-center justify-center bg-red-50">
+                                                    <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">
+                                                        PDF
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <img
+                                                    src={post.image}
+                                                    alt={post.title}
+                                                    className="w-14 h-10 object-cover border border-gray-100"
+                                                />
+                                            )}
+                                        </td>
+
+                                        {/* Título */}
+                                        <td className="px-4 py-3 text-xs font-semibold text-gray-800 max-w-xs truncate">
+                                            {post.title || 'Sin título'}
+                                        </td>
+
+                                        {/* Categoría */}
+                                        <td className="px-4 py-3">
+                                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                                {post.category || '—'}
+                                            </span>
+                                        </td>
+
+                                        {/* Tipo */}
+                                        <td className="px-4 py-3">
+                                            <span className={`text-[9px] font-black uppercase tracking-widest border px-2 py-0.5 ${
+                                                post.pdf
+                                                    ? 'border-red-100 text-red-400'
+                                                    : 'border-gray-200 text-gray-400'
+                                            }`}>
+                                                {post.pdf ? 'Revista' : 'Artículo'}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <EmptyRow cols={4} message="No hay publicaciones recientes" />
                                 )}
-                            </TableBody>
-                        </Table>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+
             </div>
         </div>
     );

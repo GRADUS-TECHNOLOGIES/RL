@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import path from 'path';
 
 import userRoutes from './routes/user.route.js';
@@ -23,7 +24,11 @@ mongoose
     .catch((error) => console.error('Error al conectar a MongoDB:', error));
 
 //* MIDDLEWARES
-app.use(express.json()); // Para leer JSON en requests
+app.use(helmet({
+    contentSecurityPolicy: false, // Se gestiona por separado en producción con CDN/Firebase
+    crossOriginEmbedderPolicy: false, // Necesario para embeds de PDF
+}));
+app.use(express.json());
 app.use(cookieParser());
 
 //* LOG DE RUTAS PARA DEBUG

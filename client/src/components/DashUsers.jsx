@@ -1,216 +1,253 @@
-import { Button, Modal, ModalBody, ModalHeader, Table, TableBody, TableCell, TableHead, TableHeadCell, TableRow } from 'flowbite-react';
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 
+// ── Primitivos ─────────────────────────────────────────────────────────────
+
+const SectionLabel = ({ label }) => (
+    <div className="flex items-center gap-3">
+        <div className="w-[2px] h-4 bg-[#B076CE] flex-shrink-0" />
+        <span className="text-[10px] font-black text-[#B076CE] uppercase tracking-[0.3em]">{label}</span>
+        <div className="flex-1 h-px bg-gray-100" />
+    </div>
+);
+
+function DeleteModal({ onConfirm, onClose }) {
+    return (
+        <div
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+            onClick={onClose}
+        >
+            <div className="bg-white w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-[2px] h-4 bg-red-500" />
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.3em]">
+                            Acción irreversible
+                        </span>
+                    </div>
+                    <button onClick={onClose} className="text-gray-300 hover:text-gray-900 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div className="px-6 py-6">
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">¿Estás seguro?</h3>
+                    <p className="text-sm text-gray-500 font-light mb-8 leading-relaxed">
+                        Esta acción eliminará al usuario permanentemente. No se puede deshacer.
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={onConfirm}
+                            className="flex-1 py-2.5 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-colors"
+                        >
+                            Sí, eliminar
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-[10px] font-black uppercase tracking-[0.2em] hover:border-gray-900 hover:text-gray-900 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const TH_COLS = ['Fecha', 'Avatar', 'Usuario', 'Correo', 'Admin', 'Rol', 'Eliminar'];
+
+// ── Componente principal ───────────────────────────────────────────────────
+
 export default function DashUsers() {
-    const { currentUser } = useSelector((state) => state.user);
-    const [users, setUsers] = useState([]);
-    const [showMore, setShowMore] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+    const { currentUser }                   = useSelector((s) => s.user);
+    const [users, setUsers]                 = useState([]);
+    const [showMore, setShowMore]           = useState(true);
+    const [showModal, setShowModal]         = useState(false);
     const [userIdToDelete, setUserIdToDelete] = useState('');
 
-    // Cargar usuarios iniciales o adicionales
     const fetchUsers = async (startIndex = 0) => {
         try {
-            const res = await fetch(`/api/user/getusers?startIndex=${startIndex}`);
+            const res  = await fetch(`/api/user/getusers?startIndex=${startIndex}`);
             const data = await res.json();
-
             if (res.ok) {
-                if (startIndex === 0) {
-                    setUsers(data.users);
-                } else {
-                    setUsers(prev => [...prev, ...data.users]);
-                }
-
-                if (data.users.length < 9) {
-                    setShowMore(false);
-                }
+                setUsers((prev) => startIndex === 0 ? data.users : [...prev, ...data.users]);
+                setShowMore(data.users.length >= 9);
             }
-        } catch (error) {
-            console.error('Error fetching users:', error.message);
+        } catch (err) {
+            console.error('Error al cargar usuarios:', err.message);
         }
     };
 
-    // Cargar usuarios al iniciar el componente
     useEffect(() => {
-        if (currentUser?.isAdmin) {
-            fetchUsers();
-        }
+        if (currentUser?.isAdmin) fetchUsers();
     }, [currentUser?.isAdmin]);
 
-    // Manejar carga de más usuarios
-    const handleShowMore = () => {
-        fetchUsers(users.length);
-    };
-
-    // Cambiar rol de usuario
-    const handleToggleAdmin = async (userId, currentAdminStatus) => {
-        if (!userId) return;
-
+    const handleToggleAdmin = async (userId, currentStatus) => {
         try {
-            const res = await fetch(`/api/user/updateUserRole/${userId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ isAdmin: !currentAdminStatus }),
+            const res  = await fetch(`/api/user/updateUserRole/${userId}`, {
+                method:  'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ isAdmin: !currentStatus }),
             });
-
             const data = await res.json();
-
             if (res.ok && data.user) {
-                setUsers((prev) =>
-                    prev.map((u) =>
-                        u._id === userId ? data.user : u
-                    )
-                );
+                setUsers((prev) => prev.map((u) => u._id === userId ? data.user : u));
             } else {
-                console.error('Error en el servidor:', data.message || 'No se pudo actualizar');
+                console.error(data.message || 'No se pudo actualizar el rol');
             }
-        } catch (error) {
-            console.error('Error al cambiar rol:', error.message);
+        } catch (err) {
+            console.error('Error al cambiar rol:', err.message);
         }
     };
 
-    // Eliminar usuario
     const handleDeleteUser = async () => {
         try {
-            const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
-                method: 'DELETE',
-            });
+            const res  = await fetch(`/api/user/delete/${userIdToDelete}`, { method: 'DELETE' });
             const data = await res.json();
-
             if (res.ok) {
-                setUsers(prev => prev.filter(user => user._id !== userIdToDelete));
+                setUsers((prev) => prev.filter((u) => u._id !== userIdToDelete));
                 setShowModal(false);
                 setUserIdToDelete('');
-                if (users.length <= 1) {
-                    setShowMore(false);
-                }
             } else {
-                console.error(data.message || 'Error deleting user');
+                console.error(data.message || 'Error al eliminar usuario');
             }
-        } catch (error) {
-            console.error('Error deleting user:', error.message);
+        } catch (err) {
+            console.error('Error al eliminar usuario:', err.message);
         }
     };
 
     return (
-        <div className='table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500'>
+        <div className="min-h-screen bg-white p-6 md:p-8 w-full">
+
+            {/* ── Encabezado ── */}
+            <div className="mb-8 pb-6 border-b border-gray-100">
+                <SectionLabel label="Dashboard" />
+                <h1 className="text-3xl md:text-4xl font-black text-gray-900 mt-4">Usuarios</h1>
+                <p className="text-sm text-gray-400 font-light mt-1">
+                    Gestión de cuentas y roles de acceso
+                </p>
+            </div>
+
             {currentUser?.isAdmin && users.length > 0 ? (
                 <>
-                    {/* Tabla de usuarios */}
-                    <Table hoverable className='shadow-md'>
-                        <TableHead>
-                            <TableRow>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Fecha de creación</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Imagen</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Nombre de usuario</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Correo electrónico</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Admin</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Hacer admin</TableHeadCell>
-                                <TableHeadCell className='text-gray-700 font-semibold dark:text-white'>Eliminar</TableHeadCell>
-                            </TableRow>
-                        </TableHead>
-
-                        <TableBody>
-                            {users.map((user) => (
-                                <TableRow
-                                    key={user._id}
-                                    className='bg-white hover:bg-[#f3e8ff] transition-colors duration-200'
-                                >
-                                    <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                                    <TableCell>
-                                        <img
-                                            src={user.profilePicture}
-                                            alt={user.username}
-                                            className='w-10 h-10 object-cover bg-gray-200 rounded-full'
-                                        />
-                                    </TableCell>
-                                    <TableCell className='font-medium text-gray-900'>{user.username}</TableCell>
-                                    <TableCell className='text-gray-600 dark:text-gray-400'>{user.email}</TableCell>
-                                    <TableCell>
-                                        {user.isAdmin ? (
-                                            <span className='flex items-center gap-1 text-green-500'>
-                                                <FaCheck /> Sí
-                                            </span>
-                                        ) : (
-                                            <span className='flex items-center gap-1 text-red-500'>
-                                                <FaTimes /> No
-                                            </span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        <label className="inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only"
-                                                checked={user.isAdmin}
-                                                onChange={() => handleToggleAdmin(user._id, user.isAdmin)}
-                                            />
-                                            <div
-                                                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out ${user.isAdmin ? 'bg-green-500' : 'bg-gray-300'
-                                                    }`}
-                                            >
-                                                <div
-                                                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${user.isAdmin ? 'translate-x-5' : 'translate-x-0'
-                                                        }`}
-                                                ></div>
-                                            </div>
-                                        </label>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span
-                                            onClick={() => {
-                                                setShowModal(true);
-                                                setUserIdToDelete(user._id);
-                                            }}
-                                            className='font-medium text-red-500 hover:text-red-700 hover:underline cursor-pointer'
+                    <div className="border border-gray-100 overflow-x-auto">
+                        <table className="w-full min-w-[680px]">
+                            <thead>
+                                <tr className="border-b border-gray-100 bg-gray-50/80">
+                                    {TH_COLS.map((h) => (
+                                        <th
+                                            key={h}
+                                            className="text-left text-[9px] font-black text-gray-400 uppercase tracking-[0.25em] px-4 py-2.5 whitespace-nowrap"
                                         >
-                                            Eliminar
-                                        </span>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                            {h}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {users.map((user) => (
+                                    <tr
+                                        key={user._id}
+                                        className="border-b border-gray-50 last:border-0 hover:bg-[#B076CE]/[0.03] transition-colors"
+                                    >
+                                        {/* Fecha */}
+                                        <td className="px-4 py-3 text-xs text-gray-400 font-light whitespace-nowrap">
+                                            {new Date(user.createdAt).toLocaleDateString('es-MX', {
+                                                year: 'numeric', month: 'short', day: 'numeric',
+                                            })}
+                                        </td>
 
-                    {/* Botón para cargar más usuarios */}
+                                        {/* Avatar */}
+                                        <td className="px-4 py-3">
+                                            <img
+                                                src={user.profilePicture}
+                                                alt={user.username}
+                                                className="w-8 h-8 rounded-full object-cover border border-gray-100"
+                                            />
+                                        </td>
+
+                                        {/* Usuario */}
+                                        <td className="px-4 py-3 text-xs font-semibold text-gray-800 whitespace-nowrap">
+                                            {user.username}
+                                        </td>
+
+                                        {/* Correo */}
+                                        <td className="px-4 py-3 text-xs text-gray-400 font-light max-w-[180px] truncate">
+                                            {user.email}
+                                        </td>
+
+                                        {/* Admin */}
+                                        <td className="px-4 py-3">
+                                            {user.isAdmin ? (
+                                                <span className="flex items-center gap-1.5 text-[9px] font-black text-[#B076CE] uppercase tracking-widest">
+                                                    <FaCheck className="w-2.5 h-2.5" /> Sí
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1.5 text-[9px] font-black text-gray-300 uppercase tracking-widest">
+                                                    <FaTimes className="w-2.5 h-2.5" /> No
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        {/* Toggle rol */}
+                                        <td className="px-4 py-3">
+                                            <label className="inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only"
+                                                    checked={user.isAdmin}
+                                                    onChange={() => handleToggleAdmin(user._id, user.isAdmin)}
+                                                />
+                                                <div className={`w-9 h-5 flex items-center p-0.5 transition-colors duration-300 ${
+                                                    user.isAdmin ? 'bg-[#B076CE]' : 'bg-gray-200'
+                                                }`}>
+                                                    <div className={`bg-white w-4 h-4 shadow-sm transform transition-transform duration-300 ${
+                                                        user.isAdmin ? 'translate-x-4' : 'translate-x-0'
+                                                    }`} />
+                                                </div>
+                                            </label>
+                                        </td>
+
+                                        {/* Eliminar */}
+                                        <td className="px-4 py-3">
+                                            <button
+                                                onClick={() => { setShowModal(true); setUserIdToDelete(user._id); }}
+                                                className="text-[9px] font-black text-red-300 hover:text-red-600 uppercase tracking-[0.2em] transition-colors"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
                     {showMore && (
                         <button
-                            onClick={handleShowMore}
-                            className='w-full text-[#b076ce] self-center text-sm py-4 hover:text-[#a855f7] hover:underline cursor-pointer'
+                            onClick={() => fetchUsers(users.length)}
+                            className="w-full py-3 text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] hover:text-[#B076CE] transition-colors border-t border-gray-100"
                         >
-                            Mostrar más
+                            Mostrar más →
                         </button>
                     )}
                 </>
             ) : (
-                <p className='text-center py-6 text-gray-500'>No hay usuarios aún...</p>
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <div className="w-[2px] h-8 bg-gray-100 mb-4" />
+                    <p className="text-sm text-gray-300 font-light">No hay usuarios aún</p>
+                </div>
             )}
 
-            {/* Modal de confirmación */}
-            <Modal show={showModal} onClose={() => setShowModal(false)} popup size='md'>
-                <ModalHeader />
-                <ModalBody>
-                    <div className='text-center'>
-                        <HiOutlineExclamationCircle className='h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto' />
-                        <h3 className='mb-5 text-lg text-gray-500 dark:text-gray-400'>
-                            ¿Estás seguro que deseas eliminar este usuario?
-                        </h3>
-                        <div className='flex justify-center gap-4'>
-                            <Button color='failure' onClick={handleDeleteUser}>
-                                Sí, estoy seguro
-                            </Button>
-                            <Button color='gray' onClick={() => setShowModal(false)}>
-                                No, cancelar
-                            </Button>
-                        </div>
-                    </div>
-                </ModalBody>
-            </Modal>
+            {showModal && (
+                <DeleteModal
+                    onConfirm={handleDeleteUser}
+                    onClose={() => setShowModal(false)}
+                />
+            )}
         </div>
     );
 }

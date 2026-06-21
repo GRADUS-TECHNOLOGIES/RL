@@ -1,128 +1,237 @@
-import { Alert, Button, Label, Spinner, TextInput } from 'flowbite-react';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
 
+// ── Panel editorial izquierdo (solo desktop) ───────────────────────────────
+
+function LeftPanel() {
+    return (
+        <div className="hidden lg:flex flex-col justify-between bg-gray-950 text-white px-10 xl:px-14 py-12">
+            <div>
+                <Link to="/">
+                    <img
+                        src="/logoFooter.svg"
+                        alt="Revista Legislatura"
+                        className="h-14 w-auto opacity-90 mb-8"
+                    />
+                </Link>
+                <div className="space-y-[3px] mb-6">
+                    <div className="h-[3px] bg-white" />
+                    <div className="h-[2px] bg-[#B076CE]" />
+                </div>
+                <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight mb-4">
+                    Revista<br />Legislatura
+                </h2>
+                <p className="text-gray-400 text-sm font-light leading-relaxed max-w-[260px]">
+                    La primera publicación especializada en materia legislativa y política en México.
+                </p>
+            </div>
+
+            <div className="space-y-3 my-10">
+                {['Análisis legislativo', 'Política electoral', 'Noticias de impacto'].map((t) => (
+                    <div key={t} className="flex items-center gap-3">
+                        <div className="w-[2px] h-4 bg-[#B076CE] flex-shrink-0" />
+                        <span className="text-sm text-gray-300 font-light">{t}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div>
+                <div className="h-px bg-white/10 mb-4" />
+                <p className="text-[10px] text-gray-600 font-light">
+                    © {new Date().getFullYear()} Revista Legislatura · IMEPOL
+                </p>
+            </div>
+        </div>
+    );
+}
+
+// ── Cabecera compacta móvil ────────────────────────────────────────────────
+
+function MobileHeader() {
+    return (
+        <div className="lg:hidden bg-gray-950 text-white px-6 py-6 flex items-center justify-between">
+            <Link to="/">
+                <img src="/logoFooter.svg" alt="Revista Legislatura" className="h-9 w-auto opacity-90" />
+            </Link>
+            <p className="text-[10px] text-gray-500 font-light tracking-widest uppercase">
+                Política · Legislativo
+            </p>
+        </div>
+    );
+}
+
+// ── Spinner inline ─────────────────────────────────────────────────────────
+
+function Spinner() {
+    return (
+        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+    );
+}
+
+// ── Componente principal ───────────────────────────────────────────────────
+
 export default function SignUp() {
+    const navigate                          = useNavigate();
+    const [formData, setFormData]           = useState({});
+    const [errorMessage, setErrorMessage]   = useState(null);
+    const [loading, setLoading]             = useState(false);
+
     useEffect(() => {
-        document.title = 'Registro - Revista Legislatura';
+        document.title = 'Registro – Revista Legislatura';
     }, []);
 
-    // Estado para almacenar los datos del formulario
-    const [formData, setFormData] = useState({});
-
-    // Estado para almacenar el error del formulario
-    const [errorMessage, setErrorMessage] = useState(null);
-
-    // Estado para almacenar el estado de carga
-    const [loading, setLoading] = useState(false);
-
-    // Hook para navegar entre rutas
-    const navigate = useNavigate();
-
-    // Función para manejar el cambio en los campos de entrada
-    const handleChange = (e) => {
+    const handleChange = (e) =>
         setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.username || !formData.email || !formData.password) {
+            return setErrorMessage('Por favor completa todos los campos.');
+        }
+        try {
+            setLoading(true);
+            setErrorMessage(null);
+            const res  = await fetch('/api/auth/signup', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(formData),
+            });
+            const data = await res.json();
+            if (data.success === false) return setErrorMessage(data.message);
+            setLoading(false);
+            if (res.ok) navigate('/sign-in');
+        } catch {
+            setErrorMessage('Error de conexión. Inténtalo más tarde.');
+            setLoading(false);
+        }
     };
 
-    // Función para manejar el envío del formulario
-    const handleSubmit = async (e) => {
-        e.preventDefault(); // Prevenir el comportamiento por defecto del formulario
-
-        // Mostrar mensaje de error si los campos están vacíos
-        if (!formData.username || !formData.email || !formData.password) {
-            return setErrorMessage('Por favor completa todos los campos');
-        }
-
-        // Try-catch para enviar los datos al servidor
-        try {
-            setLoading(true); // Cambiar el estado de carga a verdadero
-            setErrorMessage(null); // Limpiar el mensaje de error
-
-            const res = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json(); // Convertir la respuesta a JSON
-
-            if (data.success == false) {
-                // Si la respuesta es un error, mostrar el mensaje de error
-                return setErrorMessage(data.message);
-            }
-
-            setLoading(false); // Cambiar el estado de carga a falso
-
-            if (res.ok) {
-                navigate('/sign-in'); // Redirigir al usuario a la página de inicio de sesión
-            }
-        } catch (error) {
-            // Si hay un error en la conexión, mostrar el mensaje de error
-            setErrorMessage('Error de conexión, por favor intentelo despues');
-            setLoading(false); // Cambiar el estado de carga a falso
-        }
-    }
-
     return (
-        <div className="min-h-screen flex items-center">
-            <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
-                {/* Columna de la izquierda */}
-                <div className="flex-1">
-                    <Link to="/" className="font-bold dark:text-white text-4xl">
-                        <Link to="/" className="font-bold dark:text-white text-4xl">
-                            <img src="/logoSingInUp.svg" alt="RL Logo" className='h-50 w-auto' />
-                        </Link>
-                        <p className="font-bold italic text-sm mt-5">
-                            Sé parte de la transformación en información legislativa de México
+        <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[420px_1fr]">
+
+            {/* Panel izquierdo */}
+            <LeftPanel />
+
+            {/* Panel derecho */}
+            <div className="flex flex-col">
+                <MobileHeader />
+
+                <div className="flex flex-1 items-center justify-center px-6 py-12">
+                    <div className="w-full max-w-md">
+
+                        {/* Etiqueta de sección */}
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-[2px] h-4 bg-[#B076CE] flex-shrink-0" />
+                            <span className="text-[10px] font-black text-[#B076CE] uppercase tracking-[0.3em]">
+                                Crear cuenta
+                            </span>
+                            <div className="flex-1 h-px bg-gray-200" />
+                        </div>
+
+                        <h1 className="text-3xl font-black text-gray-900 mb-1">Únete a la comunidad</h1>
+                        <p className="text-sm text-gray-400 font-light mb-8">
+                            Accede a contenido exclusivo de análisis legislativo
                         </p>
-                    </Link>
-                </div>
 
-                {/* Columna de la derecha */}
-                <div className="flex-1">
-                    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-                        <div>
-                            <Label htmlFor="username" value="Your username" className='dark:text-black'>Tu ususario</Label>
-                            <TextInput type="text" placeholder="Usuario" id="username" onChange={handleChange} />
-                        </div>
-                        <div>
-                            <Label htmlFor="email" value="Your email" className='dark:text-black'>Tu correo</Label>
-                            <TextInput type="email" placeholder="nombre@dominio.com" id="email" onChange={handleChange} />
-                        </div>
-                        <div>
-                            <Label htmlFor="password" value="Your password" className='dark:text-black'>Tu contraseña</Label>
-                            <TextInput type="password" placeholder="Contraseña" id="password" onChange={handleChange} />
-                        </div>
-                        <Button type="submit" className='bg-[#b076ce] hover:bg-black hover:text-[#b076ce] rounded-tl-xl rounded-bl-none transition-all' disabled={loading}>
-                            {
-                                loading ? (
+                        <form onSubmit={handleSubmit} className="space-y-5">
+
+                            {/* Usuario */}
+                            <div>
+                                <label
+                                    htmlFor="username"
+                                    className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5"
+                                >
+                                    Nombre de usuario
+                                </label>
+                                <input
+                                    id="username"
+                                    type="text"
+                                    autoComplete="username"
+                                    placeholder="tuusuario"
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 placeholder:font-light outline-none focus:border-[#B076CE] transition-colors duration-200 bg-white"
+                                />
+                            </div>
+
+                            {/* Correo */}
+                            <div>
+                                <label
+                                    htmlFor="email"
+                                    className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5"
+                                >
+                                    Correo electrónico
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    placeholder="nombre@dominio.com"
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 placeholder:font-light outline-none focus:border-[#B076CE] transition-colors duration-200 bg-white"
+                                />
+                            </div>
+
+                            {/* Contraseña */}
+                            <div>
+                                <label
+                                    htmlFor="password"
+                                    className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5"
+                                >
+                                    Contraseña
+                                </label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    autoComplete="new-password"
+                                    placeholder="••••••••"
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 outline-none focus:border-[#B076CE] transition-colors duration-200 bg-white"
+                                />
+                            </div>
+
+                            {/* Error inline */}
+                            {errorMessage && (
+                                <p className="text-xs text-red-500 font-light">{errorMessage}</p>
+                            )}
+
+                            {/* Submit */}
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#B076CE] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
                                     <>
-                                        <Spinner size='sm' />
-                                        <span className='pl-3'>Cargando...</span>
+                                        <Spinner />
+                                        <span>Creando cuenta...</span>
                                     </>
-                                ) : 'REGISTRARME'
-                            }
-                        </Button>
+                                ) : 'Registrarme'}
+                            </button>
 
-                        {/* Botón de Google */}
-                        <OAuth />
-                    </form>
-                    <div className="flex gap-2 text-sm mt-5">
-                        <span>¿Tienes cuenta?</span>
-                        <Link to="/sign-in" className="text-[#b076ce] hover:text-black hover:underline transition-all duration-300">
-                            Iniciar sesión
-                        </Link>
+                            {/* Separador */}
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1 h-px bg-gray-100" />
+                                <span className="text-[10px] text-gray-400 font-light">o continúa con</span>
+                                <div className="flex-1 h-px bg-gray-100" />
+                            </div>
+
+                            <OAuth />
+                        </form>
+
+                        <p className="mt-7 text-sm text-gray-500 font-light">
+                            ¿Ya tienes cuenta?{' '}
+                            <Link
+                                to="/sign-in"
+                                className="text-[#B076CE] font-semibold hover:text-gray-900 transition-colors"
+                            >
+                                Ingresar →
+                            </Link>
+                        </p>
                     </div>
-
-                    {/* Mensaje de error si existe */}
-                    {errorMessage && (
-                        <Alert color="failure" className="mt-5">
-                            {errorMessage}
-                        </Alert>
-                    )}
                 </div>
             </div>
         </div>
