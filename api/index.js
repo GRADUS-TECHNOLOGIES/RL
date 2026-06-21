@@ -25,8 +25,9 @@ mongoose
 
 //* MIDDLEWARES
 app.use(helmet({
-    contentSecurityPolicy: false, // Se gestiona por separado en producción con CDN/Firebase
-    crossOriginEmbedderPolicy: false, // Necesario para embeds de PDF
+    contentSecurityPolicy: false,      // Se gestiona por separado en producción con CDN/Firebase
+    crossOriginEmbedderPolicy: false,  // Necesario para embeds de PDF
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Permite que Firebase signInWithPopup funcione
 }));
 app.use(express.json());
 app.use(cookieParser());

@@ -43,9 +43,14 @@ export default function OAuth() {
                 setError(`Error del servidor (${res.status}): ${data.message || 'Sin detalle'}`);
             }
         } catch (err) {
-            // Mostrar TODOS los errores con código para diagnóstico
-            setError(`[${err.code || 'ERROR'}] ${err.message}`);
-            console.error('OAuth error:', err);
+            if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+                // El usuario cerró el popup manualmente
+            } else if (err.code === 'auth/popup-blocked') {
+                setError('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes para este sitio.');
+            } else {
+                setError('Error al iniciar sesión con Google. Intenta de nuevo.');
+                console.error('OAuth error:', err);
+            }
         } finally {
             setLoading(false);
         }
