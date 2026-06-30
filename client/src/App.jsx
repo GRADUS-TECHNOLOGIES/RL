@@ -10,6 +10,7 @@ import Projects from './pages/Projects.jsx'
 import Purpose from './pages/Purpose.jsx'
 import ErrorPage from './pages/ErrorPage.jsx'
 import UnderConstructionPage from './pages/UnderConstructionPage.jsx'
+import ServiceDisabledPage from './pages/ServiceDisabledPage.jsx'
 
 //* IMPORT DE COMPONENTES
 import Header from './components/Header.jsx'
@@ -22,7 +23,21 @@ import PostPage from './pages/PostPage.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import Search from './pages/Search.jsx'
 
+//* CONTROL DE DISPONIBILIDAD DEL SERVICIO
+//* Cambiar a `false` para reactivar el sitio
+const SERVICE_DISABLED = true
+
 export default function App() {
+  if (SERVICE_DISABLED) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="*" element={<ServiceDisabledPage />} />
+        </Routes>
+      </Router>
+    )
+  }
+
   return (
     <Router>
       <ScrollToTop />
