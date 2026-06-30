@@ -28,7 +28,7 @@ export default function CallToAction() {
                 {/* Imagen */}
                 <div className="flex-1 overflow-hidden min-h-[200px] sm:min-h-[260px]">
                     <img
-                        src="https://portalciudadano2.diputados.gob.mx/assets/imagenes/header_6-p-800.png"
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA-8hAhzcgka1aW6itk5ogw0HTL_eG9B70QrfNFohxelD87VOcuL8en82R&s=10"
                         alt="Cámara de Diputados"
                         className="w-full h-full object-cover"
                     />
