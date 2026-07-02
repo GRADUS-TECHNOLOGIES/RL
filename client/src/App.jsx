@@ -25,7 +25,7 @@ import Search from './pages/Search.jsx'
 
 //* CONTROL DE DISPONIBILIDAD DEL SERVICIO
 //* Cambiar a `false` para reactivar el sitio
-const SERVICE_DISABLED = true
+const SERVICE_DISABLED = false
 
 export default function App() {
   if (SERVICE_DISABLED) {
