@@ -1,6 +1,7 @@
 import Post from "../models/post.model.js";
 import { errorHandler } from "../utils/error.js";
 import { sanitizeContent } from "../utils/sanitize.js";
+import { generateUniqueSlug } from "../utils/slug.js";
 
 export const create = async (req, res, next) => {
     if (!req.user.isAdmin) {
@@ -20,22 +21,18 @@ export const create = async (req, res, next) => {
         }
     }
 
-    // Generar el slug
-    const slug = req.body.title
-        .split(' ')
-        .join('-')
-        .toLowerCase()
-        .replace(/[^a-zA-Z0-9-]/g, '-');
-
-    // Crear el nuevo post (sanitizar el contenido HTML antes de persistir)
-    const newPost = new Post({
-        ...req.body,
-        content: sanitizeContent(req.body.content),
-        slug,
-        userId: req.user.id,
-    });
-
     try {
+        // Generar un slug único (añade -2, -3... si ya existe uno con el mismo título)
+        const slug = await generateUniqueSlug(Post, req.body.title);
+
+        // Crear el nuevo post (sanitizar el contenido HTML antes de persistir)
+        const newPost = new Post({
+            ...req.body,
+            content: sanitizeContent(req.body.content),
+            slug,
+            userId: req.user.id,
+        });
+
         const savedPost = await newPost.save();
         res.status(201).json(savedPost); // Respuesta exitosa
     } catch (error) {
@@ -126,12 +123,8 @@ export const updatepost = async (req, res, next) => {
             }
         }
 
-        // Actualiza el slug si cambió el título
-        const newSlug = req.body.title
-            .split(' ')
-            .join('-')
-            .toLowerCase()
-            .replace(/[^a-zA-Z0-9-]/g, '-');
+        // Actualiza el slug si cambió el título (excluye el propio post de la verificación)
+        const newSlug = await generateUniqueSlug(Post, req.body.title, post._id);
 
         const updatedPost = await Post.findByIdAndUpdate(
             req.params.postId,
