@@ -18,7 +18,7 @@ export default function CallToAction() {
                         Suscríbete a nuestra revista y nunca pierdas de vista las acciones que transforman al país.
                     </p>
                     <a
-                        href="/error"
+                        href="/sign-up"
                         className="inline-flex items-center gap-2 self-start px-5 py-2.5 border border-gray-900 text-[10px] font-black text-gray-900 uppercase tracking-[0.2em] hover:bg-[#B076CE] hover:border-[#B076CE] hover:text-white transition-all duration-300"
                     >
                         Suscribirse

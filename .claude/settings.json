@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -E 's/=.*/=<hidden>/' .env)",
+      "Bash(sed -E 's/=.*/=<hidden>/' client/.env)",
+      "Bash(node api/scripts/dropTitleIndex.js)",
+      "Bash(npx eslint *)",
+      "Bash(node --check api/models/banner.model.js)",
+      "Bash(node --check api/controllers/banner.controller.js)",
+      "Bash(node --check api/routes/banner.route.js)",
+      "Bash(node --check api/index.js)",
+      "Bash(npx --prefix client eslint /tmp/lintcheck/DashSidebar.jsx)"
+    ]
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import PostCard from '../components/PostCard';
+import InstitutionalBanner from '../components/InstitutionalBanner';
 
 // ── Primitivos ─────────────────────────────────────────────────────────────
 
@@ -276,6 +277,10 @@ export default function Search() {
                             {posts.map((post) => (
                                 <PostCard key={post._id} post={post} />
                             ))}
+                        </div>
+
+                        <div className="mt-10">
+                            <InstitutionalBanner />
                         </div>
 
                         {showMore && (

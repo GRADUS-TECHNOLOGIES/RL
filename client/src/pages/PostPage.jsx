@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 import CallToAction from '../components/CallToAction';
+import InstitutionalBanner from '../components/InstitutionalBanner';
 import CommentSection from '../components/CommentSection';
 import PostCard from '../components/PostCard';
 import { sanitizeHtml } from '../utils/sanitize';
@@ -357,6 +358,11 @@ export default function PostPage() {
                 {/* ── Comentarios ── */}
                 <div className="mb-12">
                     <CommentSection postId={post._id} />
+                </div>
+
+                {/* ── Banner institucional ── */}
+                <div className="mb-12">
+                    <InstitutionalBanner />
                 </div>
 
                 {/* ── Posts recientes ── */}

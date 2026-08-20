@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import CallToAction from '../components/CallToAction';
+import InstitutionalBanner from '../components/InstitutionalBanner';
 import PostCard from '../components/PostCard';
 import CongressCompositionChart from '../components/PieChart';
 
@@ -437,6 +438,11 @@ export default function Home() {
                     Artículos Destacados
                 </h2>
                 <EditorialGrid posts={posts} loading={loading} />
+            </section>
+
+            {/* ── Banner institucional ── */}
+            <section className="max-w-7xl mx-auto px-4 md:px-8 pb-14">
+                <InstitutionalBanner />
             </section>
 
             {/* ── Composición del Congreso ── */}

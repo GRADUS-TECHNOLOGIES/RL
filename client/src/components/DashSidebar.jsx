@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
     HiUser, HiArrowSmRight, HiDocumentText,
-    HiOutlineUserGroup, HiAnnotation, HiChartPie,
+    HiOutlineUserGroup, HiAnnotation, HiChartPie, HiSpeakerphone,
 } from 'react-icons/hi';
 import { signoutSuccess } from '../redux/user/userSlice';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     { tab: 'dash',     Icon: HiChartPie,         label: 'Tablero',     adminOnly: true  },
     { tab: 'profile',  Icon: HiUser,              label: 'Perfil',      adminOnly: false },
     { tab: 'posts',    Icon: HiDocumentText,      label: 'Artículos',   adminOnly: true  },
+    { tab: 'banners',  Icon: HiSpeakerphone,      label: 'Banners',     adminOnly: true  },
     { tab: 'users',    Icon: HiOutlineUserGroup,  label: 'Usuarios',    adminOnly: true  },
     { tab: 'comments', Icon: HiAnnotation,        label: 'Comentarios', adminOnly: true  },
 ];
