@@ -1,6 +1,7 @@
 import AuditEvent, { AUDIT_EVENT_TYPES } from '../models/auditEvent.model.js';
 import { cleanString } from '../utils/sanitize.js';
 import { parseUserAgent, lookupGeo } from '../utils/enrich.js';
+import { AUDIT_SOURCES } from '../utils/sources.js';
 
 const MAX_METADATA_JSON_LENGTH = 5000;
 
@@ -33,6 +34,7 @@ export const createEvent = async (req, res, next) => {
 
         const event = await AuditEvent.create({
             timestamp: new Date(),
+            source: req.auditSource,
             eventType,
             success,
             userId: typeof userId === 'string' ? userId.slice(0, 100) : null,
@@ -69,6 +71,9 @@ export const listEvents = async (req, res, next) => {
 
         // Filtro construido campo por campo — nunca se pasa req.query completo a Mongo.
         const filter = {};
+        if (req.query.source && AUDIT_SOURCES.includes(req.query.source)) {
+            filter.source = req.query.source;
+        }
         if (req.query.eventType && AUDIT_EVENT_TYPES.includes(req.query.eventType)) {
             filter.eventType = req.query.eventType;
         }

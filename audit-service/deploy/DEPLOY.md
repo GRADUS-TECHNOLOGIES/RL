@@ -25,9 +25,11 @@ en `127.0.0.1` del host de la VPS — se llega vía túnel SSH:
 
 ## 2. El proceso Node
 
-Empaquetado con el `Dockerfile` de esta misma carpeta (`npm ci`, imagen
-`node:22-alpine`). No hace falta `pm2` ni `systemd` — `restart: unless-stopped`
-en el `docker-compose.yml` de despliegue cumple el mismo rol.
+Empaquetado con el `Dockerfile` de esta misma carpeta (`npm install` — el
+`package-lock.json` está en `.gitignore` a nivel repo, así que un clon fresco
+no lo trae, igual que en TraductivIA/Frontend — imagen `node:22-alpine`). No
+hace falta `pm2` ni `systemd` — `restart: unless-stopped` en el
+`docker-compose.yml` de despliegue cumple el mismo rol.
 
 `AUDIT_BIND_HOST=0.0.0.0` se fija explícitamente en el `docker-compose.yml`
 de despliegue (no en este repo) — ver el comentario en `index.js` para por
@@ -51,11 +53,31 @@ En las variables de entorno de Render (no en este repo):
 
 ```
 AUDIT_SERVICE_URL=https://audit.test-gradus.tech
-AUDIT_WRITE_TOKEN=<el mismo valor que AUDIT_WRITE_TOKEN en la VPS>
+AUDIT_WRITE_TOKEN=<el mismo valor que AUDIT_WRITE_TOKEN_RL en la VPS>
 ```
 
 `AUDIT_READ_TOKEN` **no** se configura en Render — la lectura de eventos se
 hace directo contra la VPS, nunca a través de la app de la revista.
+
+## 5.1 Multi-tenant — otras apps institucionales
+
+El Audit Service no es exclusivo de RL. Cada app (Portal, SGI, Nuni,
+TraductivIA) tiene su **propio** token de escritura
+(`AUDIT_WRITE_TOKEN_<NOMBRE>` en el `.env` de la VPS — ver `.env.example` y
+`utils/sources.js`), nunca comparten uno. El middleware determina de qué app
+viene cada evento por **cuál token coincidió**, no por nada que el body del
+request diga — así ninguna app puede reportar eventos a nombre de otra. Una
+app sin su variable configurada todavía simplemente no puede autenticar; no
+afecta a las demás.
+
+Para dar de alta una app nueva: generar su token, agregarlo como
+`AUDIT_WRITE_TOKEN_<NOMBRE>` en el `.env` de la VPS, recrear el contenedor
+(`docker compose up -d --force-recreate audit-service`), y escribir un
+cliente HTTP no bloqueante en el lenguaje de esa app (mismo patrón que
+`api/utils/auditClient.js` de RL: `POST /events` con ese token, nunca hacer
+fallar la petición de negocio si el Audit Service no responde). El campo
+`source` en las lecturas (`GET /events?source=portal`) permite acotar por
+app.
 
 ## 6. Consultar los eventos
 

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { AUDIT_SOURCES } from '../utils/sources.js';
 
 const EVENT_TYPES = [
     'LOGIN_SUCCESS',
@@ -21,6 +22,14 @@ const auditEventSchema = new mongoose.Schema(
             type: Date,
             required: true,
             default: Date.now,
+        },
+        // Qué app institucional mandó el evento — lo fija el middleware de
+        // auth según qué token coincidió (ver middleware/serviceAuth.js),
+        // nunca un valor que el body del request pudiera falsificar.
+        source: {
+            type: String,
+            required: true,
+            enum: AUDIT_SOURCES,
         },
         eventType: {
             type: String,
@@ -121,6 +130,7 @@ auditEventSchema.index({ timestamp: 1 }, { expireAfterSeconds: RETENTION_DAYS * 
 auditEventSchema.index({ userId: 1, timestamp: -1 });
 auditEventSchema.index({ eventType: 1, timestamp: -1 });
 auditEventSchema.index({ ipAddress: 1, timestamp: -1 });
+auditEventSchema.index({ source: 1, timestamp: -1 });
 
 export const AUDIT_EVENT_TYPES = EVENT_TYPES;
 
