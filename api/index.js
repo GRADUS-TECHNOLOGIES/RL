@@ -19,13 +19,13 @@ const app = express();
 const __dirname = path.resolve();
 
 //* CONFIANZA EN PROXY (para IP real vía X-Forwarded-For)
-// PENDIENTE: confirmar con infraestructura si en producción hay un
-// reverse proxy/gateway/balanceador delante de este servidor y cuántos
-// saltos hay. Hasta entonces se usa 0 (no confiar en ningún proxy) como
-// valor seguro por defecto: req.ip será la IP del socket TCP directo.
-// Si en el futuro se agrega un proxy, este valor DEBE fijarse al número
-// exacto de saltos confiables — nunca `true`/`*`, o cualquiera podría
-// falsificar su IP vía X-Forwarded-For.
+// Confirmado en vivo contra Render (logueando x-forwarded-for real): la
+// cadena siempre trae exactamente 3 saltos entre el cliente y este proceso —
+// "<IP real>, <borde Cloudflare de Render>, <balanceador interno de
+// Render>" — más un hop local propio de Render que ni siquiera aparece en
+// el header (con trust proxy=0, req.ip da "::1", ese hop invisible).
+// TRUST_PROXY_HOPS=3 en el entorno de Render es el valor correcto — nunca
+// `true`/`*`, o cualquiera podría falsificar su IP vía X-Forwarded-For.
 app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS, 10) || 0);
 
 //* CONEXIÓN A MONGODB
@@ -46,9 +46,6 @@ app.use(cookieParser());
 //* LOG DE RUTAS PARA DEBUG
 app.use((req, res, next) => {
     console.log(`=> ${req.method} ${req.url}`);
-    // TEMPORAL — para calibrar TRUST_PROXY_HOPS contra la cadena real de
-    // proxies de Render. Quitar en cuanto quede confirmado el valor correcto.
-    console.log(`   x-forwarded-for: ${req.headers['x-forwarded-for']} | req.ip resuelto: ${req.ip}`);
     next();
 });
 
