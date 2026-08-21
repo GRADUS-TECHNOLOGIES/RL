@@ -46,6 +46,9 @@ app.use(cookieParser());
 //* LOG DE RUTAS PARA DEBUG
 app.use((req, res, next) => {
     console.log(`=> ${req.method} ${req.url}`);
+    // TEMPORAL — para calibrar TRUST_PROXY_HOPS contra la cadena real de
+    // proxies de Render. Quitar en cuanto quede confirmado el valor correcto.
+    console.log(`   x-forwarded-for: ${req.headers['x-forwarded-for']} | req.ip resuelto: ${req.ip}`);
     next();
 });
 
