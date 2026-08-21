@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
+import jwt from 'jsonwebtoken';
 import { errorHandler } from '../utils/error.js';
 import User from '../models/user.model.js';
+import { logAuditEvent } from '../utils/auditClient.js';
 
 export const test = (req, res) => {
     // Respuesta de prueba para verificar que la ruta está funcionando
@@ -41,6 +43,21 @@ export const updateUser = async (req, res, next) => {
             },
         }, { new: true });
         const { password, ...rest } = updateUser._doc;
+
+        // Un mismo envío puede incluir varios campos; la contraseña, por ser
+        // el cambio más sensible, prevalece como tipo de evento si está presente.
+        const changedFields = ['username', 'email', 'password', 'profilePicture']
+            .filter((field) => req.body[field] !== undefined);
+        logAuditEvent(req, {
+            eventType: req.body.password ? 'PASSWORD_CHANGE' : 'ACCOUNT_CHANGE',
+            success: true,
+            userId: req.user.id,
+            actorIsAdmin: req.user.isAdmin,
+            sessionId: req.user.sid || null,
+            statusCode: 200,
+            metadata: { changedFields },
+        });
+
         res.status(200).json(rest);
     } catch (error) {
         next(error)
@@ -53,6 +70,20 @@ export const deleteUser = async (req, res, next) => {
     }
     try {
         await User.findByIdAndDelete(req.params.userId);
+
+        logAuditEvent(req, {
+            eventType: 'ACCOUNT_DELETED',
+            success: true,
+            userId: req.user.id,
+            actorIsAdmin: req.user.isAdmin,
+            sessionId: req.user.sid || null,
+            statusCode: 200,
+            metadata: {
+                targetUserId: req.params.userId,
+                selfDelete: req.user.id === req.params.userId,
+            },
+        });
+
         res.status(200).json('User has been deleted');
     } catch (error) {
         next(error);
@@ -61,6 +92,19 @@ export const deleteUser = async (req, res, next) => {
 
 export const signout = (req, res, next) => {
     try {
+        // signout no pasa por verifyToken (no requiere sesión válida para limpiar
+        // la cookie), así que aquí solo se decodifica el token sin verificar —
+        // únicamente para tener contexto informativo en el log, nunca como identidad confiable.
+        const claimed = req.cookies?.access_token ? (jwt.decode(req.cookies.access_token) || {}) : {};
+        logAuditEvent(req, {
+            eventType: 'LOGOUT',
+            success: true,
+            userId: claimed.id || null,
+            actorIsAdmin: claimed.isAdmin ?? null,
+            sessionId: claimed.sid || null,
+            statusCode: 200,
+        });
+
         res.clearCookie('access_token').status(200).json('User has been signed out');
     } catch (error) {
         next(error);
@@ -144,6 +188,22 @@ export const updateUserRole = async (req, res, next) => {
             { isAdmin: req.body.isAdmin },
             { new: true }
         );
+
+        // Evento de mayor valor de seguridad del proyecto: un admin cambiando
+        // privilegios de otra cuenta.
+        logAuditEvent(req, {
+            eventType: 'PERMISSION_CHANGE',
+            success: true,
+            userId: req.user.id,
+            actorIsAdmin: req.user.isAdmin,
+            sessionId: req.user.sid || null,
+            statusCode: 200,
+            metadata: {
+                targetUserId: userId,
+                previousIsAdmin: userToUpdate.isAdmin,
+                newIsAdmin: updatedUser.isAdmin,
+            },
+        });
 
         // Devolver respuesta exitosa
         res.status(200).json({

@@ -1,0 +1,24 @@
+{
+  "name": "audit-service",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "description": "Servicio de auditoría de accesos y seguridad institucional. Deployable independiente; en la VPS institucional corre detrás de Traefik (Docker), nunca con su puerto expuesto directamente a internet.",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.3.2",
+    "geoip-lite": "^1.4.10",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.14.0",
+    "nodemon": "^3.1.10",
+    "ua-parser-js": "^1.0.40"
+  },
+  "overrides": {
+    "ip-address": "^10.5.0"
+  }
+}

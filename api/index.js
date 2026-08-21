@@ -18,6 +18,16 @@ dotenv.config(); // Cargar variables de entorno
 const app = express();
 const __dirname = path.resolve();
 
+//* CONFIANZA EN PROXY (para IP real vía X-Forwarded-For)
+// PENDIENTE: confirmar con infraestructura si en producción hay un
+// reverse proxy/gateway/balanceador delante de este servidor y cuántos
+// saltos hay. Hasta entonces se usa 0 (no confiar en ningún proxy) como
+// valor seguro por defecto: req.ip será la IP del socket TCP directo.
+// Si en el futuro se agrega un proxy, este valor DEBE fijarse al número
+// exacto de saltos confiables — nunca `true`/`*`, o cualquiera podría
+// falsificar su IP vía X-Forwarded-For.
+app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS, 10) || 0);
+
 //* CONEXIÓN A MONGODB
 mongoose
     .connect(process.env.MONGODB_URI)

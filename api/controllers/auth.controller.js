@@ -3,6 +3,8 @@ import User from '../models/user.model.js'; // Import del modelo User para inter
 import bcryptjs from 'bcryptjs'; // Import de bcrypt para el hash de contraseñas
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken'; // Import de jsonwebtoken para la creación de tokens JWT
+import { randomUUID } from 'crypto';
+import { logAuditEvent } from '../utils/auditClient.js';
 
 export const signup = async (req, res, next) => {
     // Desestructuración de los datos del cuerpo de la solicitud
@@ -54,24 +56,51 @@ export const signin = async (req, res, next) => {
         // Buscar el usuario en la base de datos por su correo electrónico
         const validUser = await User.findOne({ email });
         if (!validUser) {
+            logAuditEvent(req, {
+                eventType: 'LOGIN_FAILED',
+                success: false,
+                statusCode: 404,
+                metadata: { reason: 'user_not_found' },
+            });
             return next(errorHandler(404, 'Usuario no encontrado')); // Si no se encuentra el usuario, pasamos un error al siguiente middleware
         }
 
         // Comparar la contraseña proporcionada con la contraseña almacenada en la base de datos
         const validPassword = bcryptjs.compareSync(password, validUser.password);
         if (!validPassword) {
+            logAuditEvent(req, {
+                eventType: 'LOGIN_FAILED',
+                success: false,
+                userId: validUser._id.toString(),
+                statusCode: 401,
+                metadata: { reason: 'invalid_password' },
+            });
             return next(errorHandler(401, 'Contraseña incorrecta')); // Si la contraseña no es válida, pasamos un error al siguiente middleware
         }
 
+        // sid: identificador de sesión embebido en el JWT, permite correlacionar
+        // los eventos de auditoría de una misma sesión (login → acciones → logout)
+        const sessionId = randomUUID();
+
         // Crear un token JWT para el usuario autenticado
         const token = jwt.sign(
-            { id: validUser._id, isAdmin: validUser.isAdmin },
+            { id: validUser._id, isAdmin: validUser.isAdmin, sid: sessionId },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
         // Desestructuración para excluir la contraseña del objeto de usuario
         const { password: pass, ...rest } = validUser._doc;
+
+        logAuditEvent(req, {
+            eventType: 'LOGIN_SUCCESS',
+            success: true,
+            userId: validUser._id.toString(),
+            actorIsAdmin: validUser.isAdmin,
+            sessionId,
+            statusCode: 200,
+            metadata: { method: 'password' },
+        });
 
         // Guardar el token en una cookie y enviar la respuesta al cliente
         res.status(200).cookie('access_token', token, {
@@ -94,12 +123,22 @@ export const google = async (req, res, next) => {
         const user = await User.findOne({ email }); // Buscar el usuario en la base de datos por su correo electrónico
 
         if (user) {
+            const sessionId = randomUUID();
             const token = jwt.sign(
-                { id: user._id, isAdmin: user.isAdmin },
+                { id: user._id, isAdmin: user.isAdmin, sid: sessionId },
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             ); // Crear un token JWT para el usuario existente
             const { password: pass, ...rest } = user._doc; // Desestructuración para excluir la contraseña del objeto de usuario
+            logAuditEvent(req, {
+                eventType: 'LOGIN_SUCCESS',
+                success: true,
+                userId: user._id.toString(),
+                actorIsAdmin: user.isAdmin,
+                sessionId,
+                statusCode: 200,
+                metadata: { method: 'google', newAccount: false },
+            });
             res.status(200).cookie('access_token', token, {
                 httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
                 secure: process.env.NODE_ENV === 'production',
@@ -116,12 +155,22 @@ export const google = async (req, res, next) => {
                 profilePicture: googlePhotoUrl
             });
             await newUser.save(); // Guardar el nuevo usuario en la base de datos
+            const sessionId = randomUUID();
             const token = jwt.sign(
-                { id: newUser._id, isAdmin: newUser.isAdmin },
+                { id: newUser._id, isAdmin: newUser.isAdmin, sid: sessionId },
                 process.env.JWT_SECRET,
                 { expiresIn: '7d' }
             ); // Crear un token JWT para el nuevo usuario
             const { password: pass, ...rest } = newUser._doc; // Desestructuración para excluir la contraseña del objeto de usuario
+            logAuditEvent(req, {
+                eventType: 'LOGIN_SUCCESS',
+                success: true,
+                userId: newUser._id.toString(),
+                actorIsAdmin: newUser.isAdmin,
+                sessionId,
+                statusCode: 200,
+                metadata: { method: 'google', newAccount: true },
+            });
             res.status(200).cookie('access_token', token, {
                 httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
                 secure: process.env.NODE_ENV === 'production', // Importante para HTTPS

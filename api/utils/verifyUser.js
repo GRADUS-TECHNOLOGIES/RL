@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { errorHandler } from './error.js';
+import { logAuditEvent } from './auditClient.js';
 
 export const verifyToken = (req, res, next) => {
     let token;
@@ -22,6 +23,21 @@ export const verifyToken = (req, res, next) => {
         if (err) {
             // Limpia la cookie para evitar sesiones atascadas cuando el token expira o es inválido
             res.clearCookie('access_token');
+
+            // jwt.decode no verifica la firma — solo se usa aquí para tener contexto
+            // en el log (qué cuenta reclamaba ser el token), nunca como identidad confiable.
+            const claimed = jwt.decode(token) || {};
+            logAuditEvent(req, {
+                eventType: 'SESSION_EXPIRED',
+                success: false,
+                statusCode: 401,
+                metadata: {
+                    reason: err.name === 'TokenExpiredError' ? 'expired' : 'invalid_or_tampered',
+                    claimedUserId: claimed.id || null,
+                    claimedSessionId: claimed.sid || null,
+                },
+            });
+
             return next(errorHandler(401, "Sesión expirada. Vuelve a iniciar sesión"));
         }
 

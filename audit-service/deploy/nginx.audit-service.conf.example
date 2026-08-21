@@ -1,0 +1,38 @@
+# OBSOLETO — la VPS institucional (2.24.205.175, test-gradus.tech) ya corre
+# Traefik (Docker) como único reverse proxy/TLS-terminator en los puertos
+# 80/443; un nginx nativo aparte competiría por esos mismos puertos y no
+# arrancaría. Ver DEPLOY.md en esta carpeta para el despliegue real
+# (Docker + Traefik). Este archivo queda solo como referencia si algún día
+# el Audit Service se despliega en una máquina SIN Traefik ya corriendo.
+#
+# Config de nginx para la VPS (2.24.205.175) — reverse proxy con TLS delante
+# del Audit Service (Express, escuchando solo en 127.0.0.1:4001).
+#
+# Reemplaza AUDIT_DOMAIN por el dominio/subdominio real que apunta a esta VPS,
+# por ejemplo: auditoria.revistalegislatura.com.mx
+#
+# Instalación (Ubuntu/Debian, típico en Hostinger):
+#   sudo apt install nginx certbot python3-certbot-nginx
+#   sudo cp nginx.audit-service.conf.example /etc/nginx/sites-available/audit-service
+#   # editar AUDIT_DOMAIN dentro del archivo copiado
+#   sudo ln -s /etc/nginx/sites-available/audit-service /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+#   sudo certbot --nginx -d AUDIT_DOMAIN   # obtiene y configura el certificado, y agrega el bloque 443 automáticamente
+
+server {
+    listen 80;
+    server_name AUDIT_DOMAIN;
+
+    location / {
+        proxy_pass http://127.0.0.1:4001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        # No se necesita X-Forwarded-For hacia el Audit Service: la IP real
+        # del visitante ya viaja dentro del cuerpo del evento (la calculó la
+        # app principal), el Audit Service no la deriva de la conexión TCP.
+    }
+}
+
+# Tras correr certbot, este bloque queda redirigido automáticamente a HTTPS
+# y se agrega un server{} en el puerto 443 con el certificado. No es
+# necesario escribirlo a mano.
