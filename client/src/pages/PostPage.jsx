@@ -208,7 +208,7 @@ export default function PostPage() {
 
                     <div className="flex flex-wrap items-center gap-4 text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">
                         <span>
-                            {new Date(post.createdAt).toLocaleDateString('es-MX', {
+                            {new Date(post.publishDate || post.createdAt).toLocaleDateString('es-MX', {
                                 year: 'numeric', month: 'long', day: 'numeric',
                             })}
                         </span>

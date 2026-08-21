@@ -137,9 +137,18 @@ export default function DashPosts() {
                                     >
                                         {/* Fecha */}
                                         <td className="px-4 py-3 text-xs text-gray-400 font-light whitespace-nowrap">
-                                            {new Date(post.updatedAt).toLocaleDateString('es-MX', {
-                                                year: 'numeric', month: 'short', day: 'numeric',
-                                            })}
+                                            <div className="flex flex-col gap-0.5">
+                                                <span>
+                                                    {new Date(post.publishDate || post.createdAt).toLocaleDateString('es-MX', {
+                                                        year: 'numeric', month: 'short', day: 'numeric',
+                                                    })}
+                                                </span>
+                                                {post.publishDate && new Date(post.publishDate) > new Date() && (
+                                                    <span className="text-[9px] font-black text-[#B076CE] uppercase tracking-widest">
+                                                        Programado
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
 
                                         {/* Media */}

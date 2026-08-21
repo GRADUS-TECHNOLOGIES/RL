@@ -48,14 +48,21 @@ const postSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        // Fecha en la que el post debe hacerse visible públicamente.
+        // Permite programar publicaciones a futuro (queda oculto hasta esa fecha).
+        publishDate: {
+            type: Date,
+            default: Date.now,
+        },
     },
     { timestamps: true }
 );
 
 // Índices para búsquedas frecuentes y ordenamiento
-// (slug y title ya tienen índice implícito por unique:true)
-postSchema.index({ category: 1, updatedAt: -1 });       // Filtro por categoría + orden
+// (slug ya tiene índice implícito por unique:true)
+postSchema.index({ category: 1, publishDate: -1 });     // Filtro por categoría + orden
 postSchema.index({ userId: 1 });                        // Posts de un usuario
+postSchema.index({ publishDate: 1 });                    // Filtro de posts programados a futuro
 postSchema.index({ title: 'text', content: 'text' });   // Full-text search
 
 const Post = mongoose.model('Post', postSchema);

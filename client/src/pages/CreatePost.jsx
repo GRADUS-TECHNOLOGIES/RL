@@ -93,7 +93,7 @@ export default function CreatePost() {
     const [imageUploadError, setImageUploadError]       = useState(null);
     const [pdfUploadError, setPdfUploadError]           = useState(null);
     const [formData, setFormData]                   = useState({
-        title: '', category: 'uncategorized', content: '', image: '', pdf: '', isMagazine: false,
+        title: '', category: 'uncategorized', content: '', image: '', pdf: '', isMagazine: false, publishDate: '',
     });
     const [isMagazineMode, setIsMagazineMode] = useState(false);
     const [publishError, setPublishError]     = useState(null);
@@ -169,10 +169,18 @@ export default function CreatePost() {
         if (!isMagazineMode && !formData.image) { setPublishError('La imagen es obligatoria para un artículo'); return; }
 
         try {
+            // El input datetime-local no lleva zona horaria: se interpreta en la
+            // hora local del navegador y se convierte a ISO/UTC antes de enviarla.
+            const payload = {
+                ...formData,
+                ...(formData.publishDate && {
+                    publishDate: new Date(formData.publishDate).toISOString(),
+                }),
+            };
             const res  = await fetch('/api/post/create', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify(formData),
+                body:    JSON.stringify(payload),
                 credentials: 'include',
             });
             const data = await res.json();
@@ -206,7 +214,7 @@ export default function CreatePost() {
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
                             Información básica
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <input
                                 type="text"
                                 id="title"
@@ -231,7 +239,21 @@ export default function CreatePost() {
                                     <Chevron />
                                 </div>
                             </div>
+                            <div>
+                                <input
+                                    type="datetime-local"
+                                    id="publishDate"
+                                    value={formData.publishDate}
+                                    onChange={(e) => setFormData({ ...formData, publishDate: e.target.value })}
+                                    className="w-full border border-gray-200 px-4 py-2.5 text-sm text-gray-700 outline-none focus:border-[#B076CE] transition-colors bg-white cursor-pointer"
+                                />
+                            </div>
                         </div>
+                        <p className="text-xs text-gray-400 font-light mt-3">
+                            {formData.publishDate
+                                ? 'La publicación permanecerá oculta hasta la fecha y hora programadas.'
+                                : 'Deja la fecha vacía para publicar de inmediato.'}
+                        </p>
                     </div>
 
                     {/* ── Toggle de modo ── */}
@@ -344,7 +366,7 @@ export default function CreatePost() {
                                     </h1>
 
                                     <p className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] mb-5 pb-4 border-b border-gray-100">
-                                        {new Date().toLocaleDateString('es-MX', {
+                                        {new Date(formData.publishDate || Date.now()).toLocaleDateString('es-MX', {
                                             year: 'numeric', month: 'long', day: 'numeric',
                                         })}
                                     </p>

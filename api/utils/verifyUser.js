@@ -45,3 +45,31 @@ export const verifyToken = (req, res, next) => {
         next();
     });
 };
+
+// Igual que verifyToken, pero nunca bloquea la petición: si hay un token
+// válido adjunta req.user, si no lo hay (o es inválido) simplemente continúa
+// como usuario anónimo. Útil para rutas públicas que deben mostrar contenido
+// extra (ej. posts programados) solo cuando quien pide es un admin autenticado.
+export const attachUserIfPresent = (req, res, next) => {
+    let token;
+
+    if (req.cookies?.access_token) {
+        token = req.cookies.access_token;
+    } else if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith("Bearer ")
+    ) {
+        token = req.headers.authorization.split(" ")[1];
+    }
+
+    if (!token) {
+        return next();
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (!err) {
+            req.user = user;
+        }
+        next();
+    });
+};

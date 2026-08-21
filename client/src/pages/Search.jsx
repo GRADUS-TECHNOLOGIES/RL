@@ -84,8 +84,8 @@ export default function Search() {
             const data = await res.json();
             const sorted = (data.posts ?? []).sort((a, b) =>
                 (params.get('sort') === 'asc')
-                    ? new Date(a.createdAt) - new Date(b.createdAt)
-                    : new Date(b.createdAt) - new Date(a.createdAt)
+                    ? new Date(a.publishDate || a.createdAt) - new Date(b.publishDate || b.createdAt)
+                    : new Date(b.publishDate || b.createdAt) - new Date(a.publishDate || a.createdAt)
             );
             setPosts(sorted);
             setShowMore(sorted.length === 9);
@@ -121,8 +121,8 @@ export default function Search() {
             const data = await res.json();
             const more = (data.posts ?? []).sort((a, b) =>
                 sidebarData.sort === 'asc'
-                    ? new Date(a.createdAt) - new Date(b.createdAt)
-                    : new Date(b.createdAt) - new Date(a.createdAt)
+                    ? new Date(a.publishDate || a.createdAt) - new Date(b.publishDate || b.createdAt)
+                    : new Date(b.publishDate || b.createdAt) - new Date(a.publishDate || a.createdAt)
             );
             setPosts((prev) => [...prev, ...more]);
             setShowMore(more.length >= 9);

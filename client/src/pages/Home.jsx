@@ -183,7 +183,7 @@ const FeaturedCard = ({ post }) => (
                         {post.category === 'uncategorized' ? 'General' : post.category}
                     </span>
                     <span className="text-gray-400 text-[11px] font-light">
-                        {new Date(post.createdAt).toLocaleDateString('es-ES', {
+                        {new Date(post.publishDate || post.createdAt).toLocaleDateString('es-ES', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
@@ -225,7 +225,7 @@ const SideArticle = ({ post, index }) => (
                     {post.title}
                 </h4>
                 <p className="text-[11px] text-gray-400 mt-1 font-light">
-                    {new Date(post.createdAt).toLocaleDateString('es-ES', {
+                    {new Date(post.publishDate || post.createdAt).toLocaleDateString('es-ES', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
@@ -336,7 +336,9 @@ export default function Home() {
             if (!res.ok) throw new Error('Failed to fetch posts');
             const data = await res.json();
             setPosts(
-                data.posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                data.posts.sort((a, b) =>
+                    new Date(b.publishDate || b.createdAt) - new Date(a.publishDate || a.createdAt)
+                )
             );
             setError(null);
         } catch (err) {

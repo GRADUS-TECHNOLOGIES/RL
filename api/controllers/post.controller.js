@@ -25,12 +25,16 @@ export const create = async (req, res, next) => {
         // Generar un slug único (añade -2, -3... si ya existe uno con el mismo título)
         const slug = await generateUniqueSlug(Post, req.body.title);
 
+        // Si no se especifica publishDate, se deja que el schema aplique su default (ahora)
+        const { publishDate, ...rest } = req.body;
+
         // Crear el nuevo post (sanitizar el contenido HTML antes de persistir)
         const newPost = new Post({
-            ...req.body,
+            ...rest,
             content: sanitizeContent(req.body.content),
             slug,
             userId: req.user.id,
+            ...(publishDate && { publishDate }),
         });
 
         const savedPost = await newPost.save();
@@ -46,6 +50,10 @@ export const getposts = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 9;
         const sortDirection = req.query.order === 'asc' ? 1 : -1;
 
+        // Solo un admin autenticado puede ver posts programados a futuro
+        // (útil para el dashboard y para previsualizar antes de que se publiquen)
+        const isAdminRequest = Boolean(req.user?.isAdmin);
+
         // Consulta dinámica
         const posts = await Post.find({
             ...(req.query.userId && { userId: req.query.userId }),
@@ -59,8 +67,9 @@ export const getposts = async (req, res, next) => {
                 ],
             }),
             ...(req.query.isMagazine && { pdf: { $exists: true, $ne: '' } }), // Filtrar revistas
+            ...(!isAdminRequest && { publishDate: { $lte: new Date() } }),
         })
-            .sort({ updatedAt: sortDirection })
+            .sort({ publishDate: sortDirection })
             .skip(startIndex)
             .limit(limit);
 
@@ -136,6 +145,8 @@ export const updatepost = async (req, res, next) => {
                     image: req.body.image,
                     pdf: req.body.pdf,
                     slug: newSlug,
+                    // Si no se envía, conserva la fecha de publicación actual
+                    ...(req.body.publishDate && { publishDate: req.body.publishDate }),
                 },
             },
             { new: true }
