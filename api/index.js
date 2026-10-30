@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './utils/mongooseConfig.js';
 //* IMPORTACIONES
 import express from 'express';
 import mongoose from 'mongoose';

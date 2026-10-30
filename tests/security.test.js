@@ -36,3 +36,8 @@ test('rejects unverified email and non-Google providers', async () => {
 });
 test('never links an existing privileged account by email', async () => { const {res,operations}=await run({existing:true}); assert.equal(res.statusCode,403); assert.deepEqual(operations[1],{email:'admin@example.test'}); });
 test('allows only an explicitly linked UID and omits password', async () => { const {res}=await run({linked:true}); assert.equal(res.statusCode,200); assert.equal(res.body.password,undefined); });
+
+test('el arranque no crea colecciones ni índices automáticamente', () => {
+  assert.equal(mongoose.get('autoCreate'), false);
+  assert.equal(mongoose.get('autoIndex'), false);
+});
