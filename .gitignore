@@ -22,8 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Keep example configuration, never local credentials
 .env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 .github/*
+!.github/workflows/
 
-# Ignore package files
-package-lock.json
+# Lockfiles are required for reproducible builds

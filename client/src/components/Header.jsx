@@ -1,10 +1,4 @@
-import {
-    Dropdown,
-    Avatar,
-    DropdownHeader,
-    DropdownItem,
-    DropdownDivider,
-} from 'flowbite-react';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AiOutlineSearch, AiOutlineClose, AiOutlineMenu } from 'react-icons/ai';
 import { useSelector, useDispatch } from 'react-redux';
@@ -22,33 +16,27 @@ const navLinks = [
 
 // ── Dropdown de usuario ────────────────────────────────────────────────────
 
-const UserDropdown = ({ currentUser, onSignout }) => (
-    <Dropdown
-        arrowIcon={false}
-        inline
-        label={
-            <Avatar
-                alt="Usuario"
-                img={
-                    currentUser.profilePicture ||
-                    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'
-                }
-                rounded
-                size="sm"
-                className="cursor-pointer ring-2 ring-transparent hover:ring-[#B076CE] transition-all duration-200"
-            />
-        }
-    >
-        <DropdownHeader>
-            <span className="block text-sm font-bold text-gray-900">{currentUser.username}</span>
-            <span className="block text-xs text-gray-500 truncate">{currentUser.email}</span>
-        </DropdownHeader>
-        <Link to="/dashboard?tab=profile">
-            <DropdownItem>Perfil</DropdownItem>
-        </Link>
-        <DropdownDivider />
-        <DropdownItem onClick={onSignout}>Cerrar sesión</DropdownItem>
-    </Dropdown>
+export const UserDropdown = ({ currentUser, onSignout }) => (
+    <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+            <button type="button" aria-label="Menú de usuario" className="cursor-pointer rounded-full ring-2 ring-transparent hover:ring-[#B076CE] transition-all duration-200">
+                <img alt="Usuario" src={currentUser.profilePicture || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'} className="w-8 h-8 rounded-full object-cover" />
+            </button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+            <DropdownMenu.Content align="end" sideOffset={5} className="z-[100] min-w-44 rounded-lg border border-gray-100 bg-white py-1 text-sm text-gray-700 shadow-lg outline-none">
+                <DropdownMenu.Label className="px-4 py-2">
+                    <span className="block text-sm font-bold text-gray-900">{currentUser.username}</span>
+                    <span className="block truncate text-xs text-gray-500">{currentUser.email}</span>
+                </DropdownMenu.Label>
+                <DropdownMenu.Item asChild className="block cursor-pointer px-4 py-2 outline-none data-[highlighted]:bg-gray-100">
+                    <Link to="/dashboard?tab=profile">Perfil</Link>
+                </DropdownMenu.Item>
+                <DropdownMenu.Separator className="my-1 h-px bg-gray-100" />
+                <DropdownMenu.Item onSelect={onSignout} className="cursor-pointer px-4 py-2 outline-none data-[highlighted]:bg-gray-100">Cerrar sesión</DropdownMenu.Item>
+            </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+    </DropdownMenu.Root>
 );
 
 // ── Componente principal ───────────────────────────────────────────────────

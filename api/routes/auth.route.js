@@ -1,7 +1,8 @@
 //* IMPORTS
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { google, signup, signin } from '../controllers/auth.controller.js';
+import { verifyToken } from '../utils/verifyUser.js';
+import { google, signup, signin, linkFirebase } from '../controllers/auth.controller.js';
 
 // Crear un enrutador de Express
 const router = express.Router();
@@ -27,6 +28,7 @@ const oauthLimiter = rateLimit({
 router.post('/signup', credentialLimiter, signup);
 router.post('/signin', credentialLimiter, signin);
 router.post('/google', oauthLimiter, google);
+router.post('/link-google', credentialLimiter, verifyToken, linkFirebase);
 
 // Exportar el enrutador para usarlo en otras partes de la aplicación
 export default router;

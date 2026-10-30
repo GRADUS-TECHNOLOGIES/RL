@@ -1,0 +1,38 @@
+name: revista-legislatura
+services:
+  revista-app:
+    image: ${RL_IMAGE:?Use an immutable image digest}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 150
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - ${RL_ENV_FILE:?Set the absolute path to the protected environment file}
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    networks:
+      - web
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.rl-revista.rule=Host(`revistalegislatura.com.mx`)
+      - traefik.http.routers.rl-revista.entrypoints=${TRAEFIK_ENTRYPOINT:?Set existing HTTPS entrypoint}
+      - traefik.http.routers.rl-revista.tls=true
+      - traefik.http.routers.rl-revista.tls.certresolver=${TRAEFIK_CERT_RESOLVER:?Set existing resolver}
+      - traefik.http.routers.rl-revista.service=rl-revista-app
+      - traefik.http.services.rl-revista-app.loadbalancer.server.port=3000
+      - traefik.http.services.rl-revista-app.loadbalancer.healthcheck.path=/readyz
+      - traefik.http.services.rl-revista-app.loadbalancer.healthcheck.interval=15s
+networks:
+  web:
+    external: true
+    name: web

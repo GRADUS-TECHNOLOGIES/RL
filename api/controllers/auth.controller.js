@@ -5,6 +5,10 @@ import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken'; // Import de jsonwebtoken para la creación de tokens JWT
 import { randomUUID } from 'crypto';
 import { logAuditEvent } from '../utils/auditClient.js';
+import { verifyFirebaseToken } from '../utils/firebaseAuth.js';
+import { createGoogleHandler } from './googleAuth.js';
+import { createLinkFirebaseHandler } from './linkFirebase.js';
+import { hasFirebaseUidIndex } from '../utils/firebaseUidIndex.js';
 
 export const signup = async (req, res, next) => {
     // Desestructuración de los datos del cuerpo de la solicitud
@@ -115,70 +119,8 @@ export const signin = async (req, res, next) => {
     }
 };
 
-export const google = async (req, res, next) => {
-    // Desestructuración de los datos del cuerpo de la solicitud
-    const { name, email, googlePhotoUrl } = req.body; // Extraemos name, email y googlePhotoUrl del cuerpo de la solicitud
+// Las cuentas existentes solo se utilizan si ya tienen un UID vinculado de
+// forma explícita. El correo no constituye prueba suficiente de vinculación.
+export const google = createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEvent, hasFirebaseUidIndex });
 
-    try {
-        const user = await User.findOne({ email }); // Buscar el usuario en la base de datos por su correo electrónico
-
-        if (user) {
-            const sessionId = randomUUID();
-            const token = jwt.sign(
-                { id: user._id, isAdmin: user.isAdmin, sid: sessionId },
-                process.env.JWT_SECRET,
-                { expiresIn: '7d' }
-            ); // Crear un token JWT para el usuario existente
-            const { password: pass, ...rest } = user._doc; // Desestructuración para excluir la contraseña del objeto de usuario
-            logAuditEvent(req, {
-                eventType: 'LOGIN_SUCCESS',
-                success: true,
-                userId: user._id.toString(),
-                actorIsAdmin: user.isAdmin,
-                sessionId,
-                statusCode: 200,
-                metadata: { method: 'google', newAccount: false },
-            });
-            res.status(200).cookie('access_token', token, {
-                httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 7 * 24 * 60 * 60 * 1000,
-            }).json(rest); // Responder con el usuario autenticado y el token
-        } else {
-            const generatedPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8); // Generar una contraseña aleatoria
-            const hashedPassword = bcryptjs.hashSync(generatedPassword, 10); // Hashear la contraseña generada
-            const newUser = new User({
-                username: name.toLowerCase().split(' ').join('') + Math.random().toString(9).slice(-4), // Generar un nombre de usuario único
-                email,
-                password: hashedPassword, // Almacenar la contraseña hasheada en lugar de la contraseña en texto plano
-                profilePicture: googlePhotoUrl
-            });
-            await newUser.save(); // Guardar el nuevo usuario en la base de datos
-            const sessionId = randomUUID();
-            const token = jwt.sign(
-                { id: newUser._id, isAdmin: newUser.isAdmin, sid: sessionId },
-                process.env.JWT_SECRET,
-                { expiresIn: '7d' }
-            ); // Crear un token JWT para el nuevo usuario
-            const { password: pass, ...rest } = newUser._doc; // Desestructuración para excluir la contraseña del objeto de usuario
-            logAuditEvent(req, {
-                eventType: 'LOGIN_SUCCESS',
-                success: true,
-                userId: newUser._id.toString(),
-                actorIsAdmin: newUser.isAdmin,
-                sessionId,
-                statusCode: 200,
-                metadata: { method: 'google', newAccount: true },
-            });
-            res.status(200).cookie('access_token', token, {
-                httpOnly: true, // La cookie solo es accesible a través de HTTP, no a través de JavaScript
-                secure: process.env.NODE_ENV === 'production', // Importante para HTTPS
-                sameSite: 'lax', // Prevenir CSRF
-                maxAge: 7 * 24 * 60 * 60 * 1000,
-            }).json(rest); // Responder con el usuario autenticado y el token
-        }
-    } catch (error) {
-        next(error); // Pasar el error al siguiente middleware de manejo de errores
-    }
-}
+export const linkFirebase = createLinkFirebaseHandler({ User, verifyFirebaseToken, bcrypt: bcryptjs, hasFirebaseUidIndex });

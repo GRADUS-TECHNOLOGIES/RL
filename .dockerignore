@@ -1,0 +1,12 @@
+.git
+.github
+.claude
+**/node_modules
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/dist
+*.log
+coverage
+audit-service

@@ -1,3 +1,4 @@
+import LinkGoogle from './LinkGoogle';
 import { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
@@ -428,6 +429,8 @@ export default function DashProfile() {
                             </div>
                         </div>
                     </div>
+
+                    <LinkGoogle />
 
                     {/* Gestión de cuenta */}
                     <div>
