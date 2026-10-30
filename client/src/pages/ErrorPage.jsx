@@ -1,4 +1,3 @@
-import { Button } from "flowbite-react";
 import { WiAlien } from "react-icons/wi";
 
 export default function ErrorPage() {
@@ -18,14 +17,14 @@ export default function ErrorPage() {
             </p>
 
             {/* Botón de regreso */}
-            <Button
+            <a
                 href="/"
                 rel="noopener noreferrer"
-                className="mt-6 px-6 py-2 bg-[#b076ce] text-white rounded-md hover:bg-[#7f5594] transition-colors duration-300"
+                className="mt-6 inline-flex items-center px-6 py-2 bg-[#b076ce] text-white rounded-md hover:bg-[#7f5594] transition-colors duration-300"
             >
                 <WiAlien className="mr-2 h-8 w-8" />
                 Regresar al inicio
-            </Button>
+            </a>
         </div>
     );
 }

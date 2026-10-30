@@ -11,8 +11,6 @@
     animation: carousel-progress 8s linear forwards;
 }
 @plugin 'tailwind-scrollbar';
-@plugin "flowbite-react/plugin/tailwindcss";
-@source "../.flowbite-react/class-list.json";
 
 /* Estilos del editor Tiptap (creación de post) */
 .toolbar button:hover svg {
