@@ -26,7 +26,7 @@ async function run({ identity=goodIdentity, verificationError=false, existing=fa
   const operations=[];
   const user={_id:'1',isAdmin:true,toObject:()=>({_id:'1',isAdmin:true,password:'private'})};
   const User={ findOne: async query => { operations.push(query); return query.firebaseUid ? (linked ? user : null) : (existing ? user : null); }, create: async () => { throw Error('unexpected create'); } };
-  const handler=createGoogleHandler({ User, verifyFirebaseToken: async () => { if(verificationError) throw Error('invalid'); return identity; }, jwt:{sign:()=> 'signed'}, logAuditEvent:()=>{} });
+  const handler=createGoogleHandler({ User, verifyFirebaseToken: async () => { if(verificationError) throw Error('invalid'); return identity; }, jwt:{sign:()=> 'signed'}, logAuditEvent:()=>{}, hasFirebaseUidIndex:async()=>true });
   const res=response(); await handler({body:{idToken:token,email:'forged@example.test'}},res,error=>{throw error}); return {res,operations};
 }
 test('rejects forged, expired or wrong-project tokens when verifier rejects', async () => { assert.equal((await run({verificationError:true})).res.statusCode,401); });

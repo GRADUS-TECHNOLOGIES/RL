@@ -11,6 +11,14 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'"
+          --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +31,10 @@ jobs:
       - run: npm ci
       - run: npm ci --prefix client
       - run: npm test
+      - name: Test MongoDB unique UID under concurrency
+        run: node --test tests/integration/linkMongo.test.js
+        env:
+          TEST_MONGODB_URI: mongodb://127.0.0.1:27017/rl_security_test
       - run: npm run build --prefix client
         env:
           VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}

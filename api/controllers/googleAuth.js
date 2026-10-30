@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { randomBytes, randomUUID } from 'node:crypto';
 
-export function createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEvent }) {
+export function createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEvent, hasFirebaseUidIndex }) {
     return async (req, res, next) => {
         try {
             if (typeof req.body?.idToken !== 'string' || !req.body.idToken) return res.status(401).json({ message: 'Autenticación inválida' });
@@ -11,6 +11,7 @@ export function createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEv
             if (!identity.uid || !identity.email || identity.email_verified !== true || identity.firebase?.sign_in_provider !== 'google.com') {
                 return res.status(401).json({ message: 'Autenticación inválida' });
             }
+            if (!(await hasFirebaseUidIndex(User))) return res.status(503).json({ message: 'Autenticación no disponible' });
             let user = await User.findOne({ firebaseUid: identity.uid });
             if (!user) {
                 // Nunca asociar una cuenta preexistente por correo, en particular administradores.
@@ -25,6 +26,9 @@ export function createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEv
             const { password, firebaseUid, ...safeUser } = user.toObject();
             logAuditEvent(req, { eventType: 'LOGIN_SUCCESS', success: true, userId: String(user._id), actorIsAdmin: user.isAdmin, sessionId, statusCode: 200, metadata: { method: 'google' } });
             return res.status(200).cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 }).json(safeUser);
-        } catch (error) { return next(error); }
+        } catch (error) {
+            if (error?.code === 11000) return res.status(409).json({ message: 'La cuenta ya está vinculada' });
+            return next(error);
+        }
     };
 }

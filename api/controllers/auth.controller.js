@@ -7,6 +7,8 @@ import { randomUUID } from 'crypto';
 import { logAuditEvent } from '../utils/auditClient.js';
 import { verifyFirebaseToken } from '../utils/firebaseAuth.js';
 import { createGoogleHandler } from './googleAuth.js';
+import { createLinkFirebaseHandler } from './linkFirebase.js';
+import { hasFirebaseUidIndex } from '../utils/firebaseUidIndex.js';
 
 export const signup = async (req, res, next) => {
     // Desestructuración de los datos del cuerpo de la solicitud
@@ -119,4 +121,6 @@ export const signin = async (req, res, next) => {
 
 // Las cuentas existentes solo se utilizan si ya tienen un UID vinculado de
 // forma explícita. El correo no constituye prueba suficiente de vinculación.
-export const google = createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEvent });
+export const google = createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEvent, hasFirebaseUidIndex });
+
+export const linkFirebase = createLinkFirebaseHandler({ User, verifyFirebaseToken, bcrypt: bcryptjs, hasFirebaseUidIndex });

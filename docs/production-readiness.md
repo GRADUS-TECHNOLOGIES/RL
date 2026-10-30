@@ -2,7 +2,7 @@
 
 ## Seguridad y compatibilidad
 
-Google usa Firebase Admin con el proyecto configurado en FIREBASE_PROJECT_ID. Solo usuarios que ya tengan firebaseUid vinculado pueden entrar con ese UID. Las cuentas existentes sin vínculo quedan bloqueadas para Google y deben usar su contraseña; si no tienen contraseña conocida es necesario diseñar una recuperación y vinculación autenticada, sin asociar automáticamente por correo. No hay mecanismo de vinculación incluido. No desplegar hasta acordar y probar esta transición. La creación normal de usuarios Google nuevos continúa modificando MongoDB durante su uso normal; las pruebas automatizadas no usan bases reales.
+Google usa Firebase Admin con el proyecto configurado en FIREBASE_PROJECT_ID. Solo usuarios que ya tengan firebaseUid vinculado pueden entrar con ese UID. Las cuentas existentes sin vínculo quedan bloqueadas para Google y deben usar su contraseña; si no tienen contraseña conocida es necesario diseñar una recuperación y vinculación autenticada, sin asociar automáticamente por correo. Se agregó un mecanismo de vinculación que requiere contraseña y token Firebase reciente; permanece bloqueado hasta crear el índice único conforme a docs/security-hardening.md. No desplegar hasta acordar y probar esta transición. La creación normal de usuarios Google nuevos continúa modificando MongoDB durante su uso normal; las pruebas automatizadas no usan bases reales.
 
 `/healthz` mide el proceso; `/readyz` requiere conexión MongoDB. Se desactiva autoIndex para que el inicio no modifique índices existentes. No ejecutar scripts de migración. La prueba de readiness no garantiza que las consultas tengan permisos.
 
@@ -31,6 +31,6 @@ El backend fue actualizado; el cliente conserva vulnerabilidades altas, incluyen
 
 Se retiraron los paquetes `@react-pdf-viewer` porque no se importan, se actualizó PDF.js a 4.10.38 y se empaqueta su worker correspondiente, en lugar de cargar el worker 2.16.105 desde un CDN. Firebase se actualizó a la rama 12. La actualización automática notificó todavía 6 vulnerabilidades altas y 35 moderadas: el gate de CI permanece activo. El PDF debe probarse en navegadores reales, así como Firebase Authentication y Storage; la compilación no demuestra compatibilidad funcional.
 
-La vinculación segura continúa pendiente. Debe exigir una sesión propia reciente, comprobación actual de la contraseña y un Firebase ID token verificado y reciente. La unicidad del UID debe garantizarse de forma atómica en MongoDB: una consulta seguida de una escritura no basta ante peticiones concurrentes. Se requiere acordar y verificar una estrategia de unicidad y sus consecuencias sobre colecciones o índices antes de habilitar el flujo; no modificar la base real durante esta fase.
+La vinculación exige sesión propia, contraseña actual, token Firebase reciente y el índice único documentado en docs/security-hardening.md. El índice debe revisarse y crearse por separado; no se ha modificado la base real.
 
 El entorno real de Traefik no se ha inspeccionado. La red web compartida no garantiza exclusividad y no es seguro confiar en un salto sin comprobar restricciones y sanitización; las pruebas de cookies, rate limit e IP reales siguen pendientes. El despliegue y rollback automatizados no están implementados. No activar CD, publicar ni desplegar mientras estas condiciones no se validen.
