@@ -1,3 +1,4 @@
+import 'dotenv/config';
 //* IMPORTACIONES
 import express from 'express';
 import mongoose from 'mongoose';
@@ -18,21 +19,15 @@ dotenv.config(); // Cargar variables de entorno
 const app = express();
 const __dirname = path.resolve();
 
-//* CONFIANZA EN PROXY (para IP real vía X-Forwarded-For)
-// Confirmado en vivo contra Render (logueando x-forwarded-for real): la
-// cadena siempre trae exactamente 3 saltos entre el cliente y este proceso —
-// "<IP real>, <borde Cloudflare de Render>, <balanceador interno de
-// Render>" — más un hop local propio de Render que ni siquiera aparece en
-// el header (con trust proxy=0, req.ip da "::1", ese hop invisible).
-// TRUST_PROXY_HOPS=3 en el entorno de Render es el valor correcto — nunca
-// `true`/`*`, o cualquiera podría falsificar su IP vía X-Forwarded-For.
-app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS, 10) || 0);
+// Confiar únicamente en el proxy inmediato requiere que solo Traefik pueda
+// acceder al contenedor y que Traefik descarte cabeceras no confiables.
+app.set('trust proxy', process.env.TRUST_PROXY_HOPS === '1' ? 1 : 0);
 
-//* CONEXIÓN A MONGODB
-mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(() => console.log('Conectado a MongoDB'))
-    .catch((error) => console.error('Error al conectar a MongoDB:', error));
+app.get('/healthz', (_req, res) => res.status(200).json({ status: 'ok' }));
+app.get('/readyz', (_req, res) => {
+    const ready = mongoose.connection.readyState === 1;
+    res.status(ready ? 200 : 503).json({ status: ready ? 'ready' : 'unavailable' });
+});
 
 //* MIDDLEWARES
 app.use(helmet({
@@ -75,8 +70,4 @@ app.use((err, req, res, next) => {
     });
 });
 
-//* INICIAR SERVIDOR
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+export { app };
