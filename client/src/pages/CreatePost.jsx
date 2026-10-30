@@ -23,10 +23,8 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 // Componentes
 import EditorToolbar from '../components/EditorToolbar';
-import { GlobalWorkerOptions } from 'pdfjs-dist';
 import { sanitizeHtml } from '../utils/sanitize';
 
-GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 // ── Constantes ─────────────────────────────────────────────────────────────
 

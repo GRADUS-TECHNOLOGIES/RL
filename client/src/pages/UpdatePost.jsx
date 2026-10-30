@@ -25,9 +25,7 @@ import TableHeader from '@tiptap/extension-table-header';
 // Componentes
 import EditorToolbar from '../components/EditorToolbar';
 import { sanitizeHtml } from '../utils/sanitize';
-import { GlobalWorkerOptions } from 'pdfjs-dist';
 
-GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 // ── Constantes ─────────────────────────────────────────────────────────────
 

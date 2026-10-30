@@ -25,3 +25,12 @@ CD aún es diseño, no está habilitado. Requiere identidad y usuario SSH exclus
 ## Auditoría de dependencias
 
 El backend fue actualizado; el cliente conserva vulnerabilidades altas, incluyendo PDF.js. CI falla deliberadamente ante auditorías altas; no publicar hasta resolverlas. Los cambios mayores en editor/PDF requieren pruebas funcionales y de seguridad antes de adoptarse. No se ha validado la imagen ni la ausencia de secretos mediante escaneo.
+
+
+## Fase 3 — hallazgos y bloqueos
+
+Se retiraron los paquetes `@react-pdf-viewer` porque no se importan, se actualizó PDF.js a 4.10.38 y se empaqueta su worker correspondiente, en lugar de cargar el worker 2.16.105 desde un CDN. Firebase se actualizó a la rama 12. La actualización automática notificó todavía 6 vulnerabilidades altas y 35 moderadas: el gate de CI permanece activo. El PDF debe probarse en navegadores reales, así como Firebase Authentication y Storage; la compilación no demuestra compatibilidad funcional.
+
+La vinculación segura continúa pendiente. Debe exigir una sesión propia reciente, comprobación actual de la contraseña y un Firebase ID token verificado y reciente. La unicidad del UID debe garantizarse de forma atómica en MongoDB: una consulta seguida de una escritura no basta ante peticiones concurrentes. Se requiere acordar y verificar una estrategia de unicidad y sus consecuencias sobre colecciones o índices antes de habilitar el flujo; no modificar la base real durante esta fase.
+
+El entorno real de Traefik no se ha inspeccionado. La red web compartida no garantiza exclusividad y no es seguro confiar en un salto sin comprobar restricciones y sanitización; las pruebas de cookies, rate limit e IP reales siguen pendientes. El despliegue y rollback automatizados no están implementados. No activar CD, publicar ni desplegar mientras estas condiciones no se validen.
