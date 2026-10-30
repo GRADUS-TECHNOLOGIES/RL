@@ -33,6 +33,13 @@ const CATEGORIES = [
     { value: 'politica',      label: 'Poder y política'       },
 ];
 
+// La opción visible «Todas las categorías» no debe filtrar por categoría.
+const toApiParams = (params) => {
+    const normalized = new URLSearchParams(params);
+    if (normalized.get('category') === 'uncategorized') normalized.delete('category');
+    return normalized;
+};
+
 // ── Skeletons de carga ─────────────────────────────────────────────────────
 
 function SkeletonCard() {
@@ -79,7 +86,7 @@ export default function Search() {
     const fetchPosts = async (params) => {
         setLoading(true);
         try {
-            const res  = await fetch(`/api/post/getposts?${params.toString()}`);
+            const res  = await fetch(`/api/post/getposts?${toApiParams(params).toString()}`);
             if (!res.ok) throw new Error('Sin resultados');
             const data = await res.json();
             const sorted = (data.posts ?? []).sort((a, b) =>
@@ -107,7 +114,7 @@ export default function Search() {
         const params = new URLSearchParams();
         params.set('searchTerm', sidebarData.searchTerm);
         params.set('sort',       sidebarData.sort);
-        params.set('category',   sidebarData.category);
+        if (sidebarData.category !== 'uncategorized') params.set('category', sidebarData.category);
         if (sidebarData.isMagazine) params.set('isMagazine', 'true');
         navigate(`/search?${params.toString()}`);
     };
@@ -116,7 +123,7 @@ export default function Search() {
         const params = new URLSearchParams(location.search);
         params.set('startIndex', posts.length);
         try {
-            const res  = await fetch(`/api/post/getposts?${params.toString()}`);
+            const res  = await fetch(`/api/post/getposts?${toApiParams(params).toString()}`);
             if (!res.ok) return;
             const data = await res.json();
             const more = (data.posts ?? []).sort((a, b) =>
@@ -250,7 +257,7 @@ export default function Search() {
                         </h1>
                         {!loading && posts.length > 0 && (
                             <p className="text-sm text-gray-400 font-light mb-1">
-                                {posts.length} {posts.length === 1 ? 'resultado' : 'resultados'}
+                                {posts.length} {posts.length === 1 ? 'resultado mostrado' : 'resultados mostrados'}
                             </p>
                         )}
                     </div>
