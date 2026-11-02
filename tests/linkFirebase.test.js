@@ -6,7 +6,7 @@ import { hasFirebaseUidIndex } from '../api/utils/firebaseUidIndex.js';
 function res() { return { statusCode: 200, status(n) { this.statusCode=n; return this; }, json(body) { this.body=body; return this; } }; }
 function fixture() {
   const users = new Map([['admin',{_id:'admin',password:'hash',isAdmin:true}],['other',{_id:'other',password:'hash',isAdmin:false}]]);
-  const identity = {uid:'firebase-uid',auth_time:Math.floor(Date.now()/1000),firebase:{sign_in_provider:'google.com'}};
+  const identity = {uid:'firebase-uid',email_verified:true,auth_time:Math.floor(Date.now()/1000),firebase:{sign_in_provider:'google.com'}};
   const User = {
     findById: id => ({ select: async () => users.get(id) ? {...users.get(id)} : null }),
     findOneAndUpdate: async (query, update) => {
@@ -28,6 +28,7 @@ test('exige sesión, contraseña y token válidos', async()=>{
   assert.equal((await f.request('admin',{password:'bad',idToken:'valid'})).statusCode,401);
   for (const idToken of ['invalid','other-project']) assert.equal((await f.request('admin',{password:'correct',idToken})).statusCode,401);
   f.identity.auth_time-=301; assert.equal((await f.request()).statusCode,401);
+  f.identity.auth_time=Math.floor(Date.now()/1000); f.identity.email_verified=false; assert.equal((await f.request()).statusCode,401);
 });
 test('UID no puede vincularse a dos cuentas aunque las peticiones sean simultáneas', async()=>{
   const f=fixture(); const responses=await Promise.all([f.request('admin'),f.request('other')]);

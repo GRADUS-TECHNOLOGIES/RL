@@ -41,6 +41,7 @@ export const updateUser = async (req, res, next) => {
                 profilePicture: req.body.profilePicture,
                 password: req.body.password,
             },
+            ...(req.body.password ? { $unset: { recoveryTokenHash: '', recoveryExpiresAt: '' } } : {}),
         }, { new: true });
         const { password, ...rest } = updateUser._doc;
 

@@ -15,6 +15,13 @@ test('inicio tradicional comprueba contraseña y emite cookie HttpOnly', async (
   try { await signin({body:{email:'test@example.test',password:'correct'}},response,e=>{throw e}); assert.equal(response.statusCode,200); assert.equal(response.cookieData.options.httpOnly,true); assert.equal(response.body.password,undefined); assert.equal(jwt.verify(response.cookieData.value,process.env.JWT_SECRET).id,'test'); }
   finally { User.findOne=original; process.env.JWT_SECRET=secret; }
 });
+test('inicio tradicional rechaza contraseña incorrecta sin sustituir el hash', async () => {
+  const original=User.findOne; const hash=await bcrypt.hash('original password',4);
+  User.findOne=async()=>({_id:'synthetic',password:hash});
+  let failure;
+  try { await signin({body:{email:'test@example.test',password:'incorrect'}},{},e=>{failure=e}); assert.equal(failure.statusCode,401); assert.equal(await bcrypt.compare('original password',hash),true); }
+  finally { User.findOne=original; }
+});
 test('Firebase Admin rechaza token de otro proyecto', async () => {
   process.env.FIREBASE_PROJECT_ID='rl-isolated-test';
   const {privateKey}=generateKeyPairSync('rsa',{modulusLength:2048});

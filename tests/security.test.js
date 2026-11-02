@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
 import { app } from '../api/index.js';
 import { createGoogleHandler } from '../api/controllers/googleAuth.js';
+import bcrypt from 'bcryptjs';
 
 async function request(path) {
   const server = app.listen(0, '127.0.0.1');
@@ -34,8 +35,16 @@ test('rejects unverified email and non-Google providers', async () => {
   assert.equal((await run({identity:{...goodIdentity,email_verified:false}})).res.statusCode,401);
   assert.equal((await run({identity:{...goodIdentity,firebase:{sign_in_provider:'password'}}})).res.statusCode,401);
 });
-test('never links an existing privileged account by email', async () => { const {res,operations}=await run({existing:true}); assert.equal(res.statusCode,403); assert.deepEqual(operations[1],{email:'admin@example.test'}); });
+test('never links an existing privileged account by email', async () => { const {res,operations}=await run({existing:true}); assert.equal(res.statusCode,403); assert.deepEqual(operations[1],{email:{$regex:'^admin@example\\.test$',$options:'i'}}); });
 test('allows only an explicitly linked UID and omits password', async () => { const {res}=await run({linked:true}); assert.equal(res.statusCode,200); assert.equal(res.body.password,undefined); });
+test('una cuenta nueva de Google recibe un secreto local aleatorio que no se entrega al usuario', async () => {
+  let created;
+  const User={findOne:async()=>null,create:async data=>{created=data;return {_id:'new-user',isAdmin:false,toObject:()=>({...data,_id:'new-user',isAdmin:false})}}};
+  const handler=createGoogleHandler({User,verifyFirebaseToken:async()=>goodIdentity,jwt:{sign:()=> 'signed'},logAuditEvent:()=>{},hasFirebaseUidIndex:async()=>true});
+  const res=response();await handler({body:{idToken:'valid'}},res,e=>{throw e});
+  assert.equal(res.statusCode,200);assert.equal(res.body.password,undefined);assert.equal(res.body.firebaseUid,undefined);
+  assert.equal(await bcrypt.compare('password',created.password),false);
+});
 
 test('el arranque no crea colecciones ni índices automáticamente', () => {
   assert.equal(mongoose.get('autoCreate'), false);

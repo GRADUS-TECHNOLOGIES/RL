@@ -12,7 +12,7 @@ export function createLinkFirebaseHandler({ User, verifyFirebaseToken, bcrypt, h
             try { identity = await verifyFirebaseToken(idToken); }
             catch { return res.status(401).json({ message: 'Credenciales inválidas' }); }
             const now = Math.floor(Date.now() / 1000);
-            if (!identity.uid || identity.firebase?.sign_in_provider !== 'google.com' ||
+            if (!identity.uid || identity.email_verified !== true || identity.firebase?.sign_in_provider !== 'google.com' ||
                 !Number.isInteger(identity.auth_time) || identity.auth_time > now + 30 || now - identity.auth_time > 300)
                 return res.status(401).json({ message: 'Se requiere autenticación reciente con Google' });
             if (!(await hasFirebaseUidIndex(User))) return res.status(503).json({ message: 'Vinculación no disponible' });

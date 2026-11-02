@@ -8,14 +8,15 @@ export function createGoogleHandler({ User, verifyFirebaseToken, jwt, logAuditEv
             let identity;
             try { identity = await verifyFirebaseToken(req.body.idToken); }
             catch { return res.status(401).json({ message: 'Autenticación inválida' }); }
-            if (!identity.uid || !identity.email || identity.email_verified !== true || identity.firebase?.sign_in_provider !== 'google.com') {
+            if (!identity.uid || typeof identity.email !== 'string' || !identity.email || identity.email.length > 254 || identity.email_verified !== true || identity.firebase?.sign_in_provider !== 'google.com') {
                 return res.status(401).json({ message: 'Autenticación inválida' });
             }
             if (!(await hasFirebaseUidIndex(User))) return res.status(503).json({ message: 'Autenticación no disponible' });
             let user = await User.findOne({ firebaseUid: identity.uid });
             if (!user) {
                 // Nunca asociar una cuenta preexistente por correo, en particular administradores.
-                if (await User.findOne({ email: identity.email })) return res.status(403).json({ message: 'La cuenta requiere vinculación segura; inicia sesión con contraseña o contacta al administrador.' });
+                const escapedEmail = identity.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                if (await User.findOne({ email: { $regex: `^${escapedEmail}$`, $options: 'i' } })) return res.status(403).json({ message: 'La cuenta requiere vinculación segura; inicia sesión con contraseña o contacta al administrador.' });
                 const username = `google${randomBytes(8).toString('hex')}`;
                 user = await User.create({ username, email: identity.email, firebaseUid: identity.uid,
                     password: await bcrypt.hash(randomBytes(32).toString('hex'), 10),
