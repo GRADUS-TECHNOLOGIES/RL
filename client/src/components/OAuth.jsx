@@ -36,7 +36,9 @@ export default function OAuth() {
                 dispatch(signinSuccess(data));
                 navigate('/');
             } else {
-                setError(`Error del servidor (${res.status}): ${data.message || 'Sin detalle'}`);
+                setError(res.status === 403
+                    ? 'Tu cuenta necesita vincularse de forma segura. Inicia sesión con tu contraseña y vincula Google desde tu perfil. Si no tienes contraseña, solicita recuperar el acceso.'
+                    : 'No fue posible iniciar sesión con Google. Inténtalo de nuevo más tarde.');
             }
         } catch (err) {
             if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
@@ -79,6 +81,7 @@ export default function OAuth() {
             {error && (
                 <div className="border border-red-100 bg-red-50 px-3 py-2">
                     <p className="text-xs text-red-600 font-mono break-all">{error}</p>
+                    <a href="/recuperar-acceso" className="text-xs underline">Recuperar acceso</a>
                 </div>
             )}
         </div>

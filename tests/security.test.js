@@ -34,7 +34,7 @@ test('rejects unverified email and non-Google providers', async () => {
   assert.equal((await run({identity:{...goodIdentity,email_verified:false}})).res.statusCode,401);
   assert.equal((await run({identity:{...goodIdentity,firebase:{sign_in_provider:'password'}}})).res.statusCode,401);
 });
-test('never links an existing privileged account by email', async () => { const {res,operations}=await run({existing:true}); assert.equal(res.statusCode,403); assert.deepEqual(operations[1],{email:'admin@example.test'}); });
+test('never links an existing privileged account by email', async () => { const {res,operations}=await run({existing:true}); assert.equal(res.statusCode,403); assert.deepEqual(operations[1],{email:{$regex:'^admin@example\\.test$',$options:'i'}}); });
 test('allows only an explicitly linked UID and omits password', async () => { const {res}=await run({linked:true}); assert.equal(res.statusCode,200); assert.equal(res.body.password,undefined); });
 
 test('el arranque no crea colecciones ni índices automáticamente', () => {

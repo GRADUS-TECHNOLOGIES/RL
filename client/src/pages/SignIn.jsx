@@ -88,7 +88,7 @@ export default function SignIn() {
     }, [dispatch]);
 
     const handleChange = (e) =>
-        setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
+        setFormData({ ...formData, [e.target.id]: e.target.id === 'email' ? e.target.value.trim() : e.target.value });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -103,7 +103,10 @@ export default function SignIn() {
                 body:    JSON.stringify(formData),
             });
             const data = await res.json();
-            if (data.success === false) return dispatch(signinFailure(data.message));
+            if (!res.ok) return dispatch(signinFailure(res.status === 429
+                ? 'Demasiados intentos. Espera 15 minutos y vuelve a intentarlo.'
+                : res.status === 401 || res.status === 404
+                    ? 'Correo o contraseña incorrectos.' : 'No fue posible iniciar sesión. Inténtalo más tarde.'));
             if (res.ok) {
                 dispatch(signinSuccess(data));
                 navigate('/');
@@ -177,6 +180,8 @@ export default function SignIn() {
                                     className="w-full border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-300 outline-none focus:border-[#B076CE] transition-colors duration-200 bg-white"
                                 />
                             </div>
+
+                            <div className="text-right"><Link to="/recuperar-acceso" className="text-sm text-[#8b55aa] underline">¿Olvidaste tu contraseña?</Link></div>
 
                             {/* Error inline */}
                             {errorMsg && (

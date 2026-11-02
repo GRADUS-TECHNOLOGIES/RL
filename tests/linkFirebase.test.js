@@ -6,7 +6,7 @@ import { hasFirebaseUidIndex } from '../api/utils/firebaseUidIndex.js';
 function res() { return { statusCode: 200, status(n) { this.statusCode=n; return this; }, json(body) { this.body=body; return this; } }; }
 function fixture() {
   const users = new Map([['admin',{_id:'admin',password:'hash',isAdmin:true}],['other',{_id:'other',password:'hash',isAdmin:false}]]);
-  const identity = {uid:'firebase-uid',auth_time:Math.floor(Date.now()/1000),firebase:{sign_in_provider:'google.com'}};
+  const identity = {uid:'firebase-uid',email_verified:true,auth_time:Math.floor(Date.now()/1000),firebase:{sign_in_provider:'google.com'}};
   const User = {
     findById: id => ({ select: async () => users.get(id) ? {...users.get(id)} : null }),
     findOneAndUpdate: async (query, update) => {

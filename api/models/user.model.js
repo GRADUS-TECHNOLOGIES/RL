@@ -24,6 +24,8 @@ const userSchema = new mongoose.Schema({
             default: 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png', // Imagen de perfil por defecto 
         },
         firebaseUid: { type: String, select: false },
+        recoveryTokenHash: { type: String, select: false },
+        recoveryExpiresAt: { type: Date, select: false },
         isAdmin: {
             type: Boolean,
             default: false,

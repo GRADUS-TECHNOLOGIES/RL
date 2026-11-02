@@ -18,8 +18,9 @@ export default function LinkGoogle() {
                 method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password, idToken }),
             });
-            const data = await response.json();
-            setMessage(data.message || 'No fue posible vincular la cuenta.');
+            setMessage(response.ok ? 'Tu cuenta de Google quedó vinculada.' : response.status === 409
+                ? 'No se pudo vincular: la cuenta puede estar vinculada o haber cambiado. Contacta al administrador.'
+                : 'No fue posible vincular la cuenta. Verifica tu contraseña y vuelve a autenticarte con Google.');
         } catch { setMessage('No fue posible vincular la cuenta. Intenta nuevamente.'); }
         finally { setPassword(''); setLoading(false); }
     };
